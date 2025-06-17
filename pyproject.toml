@@ -1,0 +1,121 @@
+[project]
+name = "repository-template"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    {name = "Benito Martin"}
+]
+license = {text = "MIT License"}
+requires-python = ">=3.12"
+
+dependencies = [
+
+]
+
+[dependency-groups]
+dev = [
+
+]
+lint = [
+
+]
+test = [
+
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
+
+######################################
+# --- Linting & Formatting Tools --- #
+######################################
+
+[tool.ruff]
+# Assume Python 3.12
+target-version = "py312"
+
+# Same as Black.
+line-length = 105
+indent-width = 4
+
+# Exclude a variety of commonly ignored directories.
+exclude = [
+  ".bzr",
+  ".direnv",
+  ".eggs",
+  ".git",
+  ".git-rewrite",
+  ".hg",
+  ".mypy_cache",
+  ".nox",
+  ".pants.d",
+  ".pytype",
+  ".ruff_cache",
+  ".svn",
+  ".tox",
+  ".venv",
+  "__pypackages__",
+  "_build",
+  "buck-out",
+  "build",
+  "dist",
+  "node_modules",
+  "venv",
+]
+
+# Whether to show an enumeration of all fixed lint violations
+show-fixes = true
+
+# Enable common lint rules.
+lint.select = [
+  "B",    # flake8-bugbear
+  "E",    # pycodestyle
+  "F",    # Pyflakes1
+  "I",    # isort
+  "SIM",  # similarity
+  "UP",   # pyupgrade
+]
+lint.ignore = []
+
+# Allow autofix for all enabled rules (when `--fix`) is provided.
+lint.fixable = ["ALL"]
+lint.unfixable = []
+
+[tool.ruff.lint.mccabe]
+# Maximum allowed McCabe complexity.
+max-complexity = 10
+
+
+#########################
+# --- Static Typing --- #
+#########################
+
+[tool.mypy]
+# Mypy configuration.
+files = ["src"]  # Check from project root instead of just src
+mypy_path = ["src"]  # Set mypy path to project root
+ignore_missing_imports = true
+disallow_untyped_defs = true
+check_untyped_defs = true
+warn_redundant_casts = true
+warn_unused_ignores = false
+warn_return_any =false
+strict_optional = true
+
+#########################
+# --- Testing Tools --- #
+#########################
+
+[tool.pytest.ini_options]
+testpaths = [ "tests" ]
+python_files = [ "test_*.py" ]
+addopts = "-ra -v -s"
+filterwarnings = [
+    "ignore::DeprecationWarning",
+    "ignore::UserWarning"
+]
