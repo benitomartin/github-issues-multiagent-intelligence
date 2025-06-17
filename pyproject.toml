@@ -10,15 +10,25 @@ license = {text = "MIT License"}
 requires-python = ">=3.12"
 
 dependencies = [
-
+    "alembic>=1.16.2",
+    "loguru>=0.7.3",
+    "psycopg2-binary>=2.9.10",
+    "pydantic>=2.11.7",
+    "pydantic-settings>=2.9.1",
+    "python-dotenv>=1.1.0",
+    "requests>=2.32.4",
+    "sqlalchemy>=2.0.41",
 ]
 
 [dependency-groups]
 dev = [
-
+    "pre-commit>=4.2.0",
 ]
 lint = [
-
+    "mypy>=1.16.1",
+    "ruff>=0.11.13",
+    "types-pyyaml>=6.0.12.20250516",
+    "types-requests>=2.32.4.20250611",
 ]
 test = [
 
@@ -40,7 +50,7 @@ packages = ["src"]
 target-version = "py312"
 
 # Same as Black.
-line-length = 105
+line-length = 125
 indent-width = 4
 
 # Exclude a variety of commonly ignored directories.

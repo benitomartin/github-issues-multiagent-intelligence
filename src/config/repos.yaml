@@ -1,0 +1,11 @@
+- owner: pandas-dev
+  repo: pandas
+  state: all
+  per_page: 100
+  max_pages: 2
+
+- owner: scikit-learn
+  repo: scikit-learn
+  state: all
+  per_page: 100
+  max_pages: 2
