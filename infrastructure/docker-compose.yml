@@ -29,3 +29,4 @@ services:
 
 volumes:
   db_data:
+    name: db_data_${APP_ENV}
