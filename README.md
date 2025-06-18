@@ -12,7 +12,7 @@
     - [Configuration](#configuration)
     - [PostgreSQL](#postgresql)
       - [Alembic](#alembic)
-    - [Module 2](#module-2)
+    - [AWS CDK](#aws-cdk)
     - [Testing](#testing)
   - [License](#license)
 
@@ -21,6 +21,47 @@
 Briefly describe the project, its purpose, and key features.
 
 ## Project Structure
+
+```text
+├── LICENSE
+├── Makefile
+├── README.md
+├── alembic.ini
+├── configs
+│   ├── dev.yaml                  # Configuration file for development environment
+│   └── staging.yaml              # Configuration file for staging environment
+├── github_test_request.py
+├── infrastructure
+│   └── docker-compose.yml        # Docker Compose file for development environment
+├── migrations                    # Alembic migration files
+│   ├── README
+│   ├── env.py
+│   ├── script.py.mako
+│   └── versions
+│       └── d84b3a18383b_describe_change.py
+├── pyproject.toml
+├── scripts
+│   └── lint-makefile.sh
+├── src
+│   ├── __init__.py
+│   ├── config
+│   │   └── repos.yaml              # Repository configuration file
+│   ├── data_pipeline
+│   │   ├── __init__.py
+│   │   └── ingestion.py            # Module for data ingestion
+│   ├── database                    # Module for database operations
+│   │   ├── __init__.py
+│   │   ├── drop_tables.py
+│   │   ├── init_db.py
+│   │   └── session.py
+│   ├── models                      # Module for database models
+│   │   ├── __init__.py
+│   │   ├── db_models.py
+│   │   └── repo_models.py
+│   └── utils                       # Module for utility functions
+│       └── config.py
+└── uv.lock
+```
 
 ```text
 github-issues-multiagent-intelligence/
@@ -97,7 +138,7 @@ github-issues-multiagent-intelligence/
 │   ├── evaluation/
 │   │   ├── __init__.py
 │   │   ├── metrics.py               # Evaluation metrics (e.g. accuracy, precision for classification)
-│   │   └── observability.py        # Integrations with Opik or other monitoring
+│   │   └── observability.py         # Integrations with Opik or other monitoring
 │   └── utils/
 │       ├── __init__.py
 │       ├── config.py
@@ -224,9 +265,16 @@ alembic revision --autogenerate -m "Change issue_id to BigInteger"
 alembic upgrade head
 ```
 
-### Module 2
+### AWS CDK
 
-(Add description or usage example)
+From the root of the project:
+
+```bash
+cd aws_cdk_infra
+cdk init
+cdk bootstrap
+cdk deploy
+```
 
 ### Testing
 

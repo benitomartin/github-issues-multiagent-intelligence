@@ -196,3 +196,4 @@ cython_debug/
 
 github_test_request.py
 .env.*
+*.env.*

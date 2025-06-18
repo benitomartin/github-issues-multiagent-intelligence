@@ -1,4 +1,2 @@
 github_token: ${GITHUB_TOKEN}
-repos_config_path: src/config/repos.yaml
 db_url: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
-log_level: DEBUG

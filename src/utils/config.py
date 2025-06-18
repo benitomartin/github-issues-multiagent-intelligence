@@ -20,6 +20,7 @@ class Settings(BaseSettings):
     POSTGRES_HOST: str = "localhost"
     POSTGRES_PORT: str = "5432"
     ADMINER_PORT: str = "8080"
+    SECRET_NAME: str = ""
     APP_ENV: str = "dev"
 
 

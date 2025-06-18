@@ -22,6 +22,7 @@ dependencies = [
 
 [dependency-groups]
 dev = [
+    "boto3>=1.38.38",
     "pre-commit>=4.2.0",
 ]
 lint = [
