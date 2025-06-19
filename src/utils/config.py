@@ -22,6 +22,12 @@ class Settings(BaseSettings):
     ADMINER_PORT: str = "8080"
     SECRET_NAME: str = ""
     APP_ENV: str = "dev"
+    LEN_EMBEDDINGS: int = 1024
+    QDRANT_API_KEY: str = ""
+    QDRANT_URL: str = ""
+    DENSE_MODEL_NAME: str = "BAAI/bge-large-en-v1.5"
+    SPARSE_MODEL_NAME: str = "Qdrant/minicoil-v1"
+    COLLECTION_NAME: str = "github_issues_embeddings"
 
 
 # Determine environment first

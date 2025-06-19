@@ -18,17 +18,17 @@ export
 APP_ENV ?= dev
 
 #################################################################################
-## Infrastructure
+## Docker
 #################################################################################
 
 docker-up: ## Start Docker containers
 	@echo "Starting Docker containers with $(ENV_FILE)..."
-	docker-compose --env-file $(ENV_FILE) -f infrastructure/docker-compose.yml up -d
+	docker-compose --env-file $(ENV_FILE) -f docker/docker-compose.yml up -d
 	@echo "Docker containers started."
 
 docker-down: ## Stop and remove Docker containers
 	@echo "Stopping Docker containers..."
-	docker-compose --env-file $(ENV_FILE) -f infrastructure/docker-compose.yml down
+	docker-compose --env-file $(ENV_FILE) -f docker/docker-compose.yml down
 	@echo "Docker containers stopped."
 
 #################################################################################
@@ -49,6 +49,36 @@ ingest-github-issues: ## Ingest GitHub issues
 	@echo "Ingesting GitHub issues for $(APP_ENV)..."
 	APP_ENV=$(APP_ENV) uv run src/data_pipeline/ingestion.py
 	@echo "GitHub issues ingested successfully."
+
+#################################################################################
+## Qdrant Commands
+#################################################################################
+
+create-collection: ## Create Qdrant collection
+	@echo "Creating Qdrant collection for $(APP_ENV)..."
+	APP_ENV=$(APP_ENV) uv run src/vectorstore/create_collection.py
+	@echo "Qdrant collection created successfully."
+
+create-indexes: ## Create Qdrant collection
+	@echo "Creating Qdrant indexes for $(APP_ENV)..."
+	APP_ENV=$(APP_ENV) uv run src/vectorstore/create_index.py
+	@echo "Qdrant indexes created successfully."
+
+
+delete-collection: ## Delete Qdrant collection
+	@echo "Deleting Qdrant collection for $(APP_ENV)..."
+	APP_ENV=$(APP_ENV) uv run src/vectorstore/delete_collection.py
+	@echo "Qdrant collection deleted successfully."
+
+ingest-embeddings: ## Ingest embeddings into Qdrant
+	@echo "Ingesting embeddings into Qdrant for $(APP_ENV)..."
+	APP_ENV=$(APP_ENV) uv run src/vectorstore/ingest_embeddings.py
+	@echo "Embeddings ingested successfully."
+
+ingest-embeddings-async: ## Ingest embeddings into Qdrant
+	@echo "Ingesting embeddings into Qdrant for $(APP_ENV)..."
+	APP_ENV=$(APP_ENV) uv run src/vectorstore/ingest_embeddings_async.py
+	@echo "Embeddings ingested successfully."
 
 #################################################################################
 ## Testing Commands

@@ -53,8 +53,8 @@ else:
 
 # Initialize SQLAlchemy
 engine = create_engine(DATABASE_URL, echo=True)
-SessionLocal = sessionmaker(bind=engine)
+SessionInit = sessionmaker(bind=engine)
 
 
 def get_session() -> Session:
-    return SessionLocal()
+    return SessionInit()

@@ -124,7 +124,7 @@ class GitHubIssuesCollector:
                 return None
             logger.info(f"Updating issue #{issue['number']}")
         else:
-            logger.info(f"Inserting new issue #{issue['number']}")
+            # logger.info(f"Inserting new issue #{issue['number']}")
             issue_db = Issue(number=issue["number"])
 
         # Update fields
@@ -158,7 +158,7 @@ class GitHubIssuesCollector:
                 return
             logger.info(f"Updating comment {comment['id']}")
         else:
-            logger.info(f"Inserting new comment {comment['id']}")
+            # logger.info(f"Inserting new comment {comment['id']}")
             comment_db = Comment(comment_id=comment["id"], issue_id=issue_id)
 
         comment_db.author = comment["user"]["login"]
