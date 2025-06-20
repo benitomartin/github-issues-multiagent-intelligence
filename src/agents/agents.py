@@ -75,18 +75,6 @@ async def recommendation_agent(state: IssueState) -> IssueState:
             if len(top_references) == 4:
                 break
 
-        # # Generate a short context summary or recommendation prompt
-        # prompt = (
-        #     f"The following GitHub issue has been classified as:\n"
-        #     f"- Category: {state['classification']['category']}\n"
-        #     f"- Priority: {state['classification']['priority']}\n"
-        #     f"- Labels: {', '.join(state['classification']['labels'])}\n"
-        #     f"- Assignee: {state['classification']['assignee']}\n\n"
-        #     f"Here are the most similar past issues:\n"
-        #     + "\n".join(f"- {url}" for url in top_references) +
-        #     "\n\nWrite a helpful recommendation summary."
-        # )
-
         prompt = PromptTemplates.summary_prompt(dict(state), top_references)
 
         response = await services.llm.ainvoke(prompt)
