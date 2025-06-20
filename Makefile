@@ -80,6 +80,19 @@ ingest-embeddings-async: ## Ingest embeddings into Qdrant
 	APP_ENV=$(APP_ENV) uv run src/vectorstore/ingest_embeddings_async.py
 	@echo "Embeddings ingested successfully."
 
+vector-test: ## Test vector search
+	APP_ENV=$(APP_ENV) uv run src/vectorstore/vectorstore_test.py
+
+
+#################################################################################
+## Graph Commands
+#################################################################################
+
+query-graph: ## Query the graph
+	@echo "Querying the graph for $(APP_ENV)..."
+	APP_ENV=$(APP_ENV) uv run src/agents/graph.py
+	@echo "Querying the graph completed."
+
 #################################################################################
 ## Testing Commands
 #################################################################################

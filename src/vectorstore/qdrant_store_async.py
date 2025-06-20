@@ -75,3 +75,34 @@ class AsyncQdrantVectorStore:
             )
         except Exception as e:
             logger.info(f"Index for 'comment_id' may already exist or failed: {e}")
+
+    async def search_similar_issues(self, query_text: str, limit: int = 5) -> list[models.ScoredPoint]:
+        dense_vector = (await self.dense_vectors([query_text]))[0]
+        sparse_vector = (await self.sparse_vectors([query_text]))[0]
+
+        results = await self.client.query_points(
+            collection_name=self.collection_name,
+            prefetch=[
+                models.Prefetch(
+                    query=models.SparseVector(**sparse_vector.as_object()),
+                    using="miniCOIL",
+                    limit=10,
+                ),
+                models.Prefetch(
+                    query=dense_vector,
+                    using="dense",
+                    score_threshold=0.9,
+                    limit=10,
+                ),
+            ],
+            query=models.FusionQuery(fusion=models.Fusion.RRF),
+            search_params=models.SearchParams(
+                quantization=models.QuantizationSearchParams(
+                    ignore=False,
+                    rescore=True,
+                    oversampling=2.0,
+                )
+            ),
+            limit=limit,
+        )
+        return results.points
