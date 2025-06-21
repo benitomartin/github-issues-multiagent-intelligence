@@ -1,5 +1,5 @@
 [project]
-name = "repository-template"
+name = "github-intelligence"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
@@ -12,7 +12,9 @@ requires-python = ">=3.12"
 dependencies = [
     "alembic>=1.16.2",
     "fastembed-gpu>=0.7.1",
-    "langchain>=0.3.25",
+    "guardrails-ai==0.6.6",
+    "guardrails-api-client>=0.4.0a1",
+    "langchain>=0.3.26",
     "langchain-openai>=0.3.24",
     "langgraph>=0.4.8",
     "loguru>=0.7.3",
@@ -27,13 +29,13 @@ dependencies = [
 
 [dependency-groups]
 dev = [
-    "boto3>=1.38.38",
-    "langgraph-cli[inmem]>=0.3.3",
-    "pre-commit>=4.2.0",
+ "boto3>=1.38.41",
+ "langgraph-cli[inmem]>=0.3.3",
+ "pre-commit>=4.2.0",
 ]
 lint = [
     "mypy>=1.16.1",
-    "ruff>=0.11.13",
+    "ruff>=0.12.0",
     "types-pyyaml>=6.0.12.20250516",
     "types-requests>=2.32.4.20250611",
 ]

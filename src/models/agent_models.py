@@ -22,6 +22,8 @@ class IssueState(TypedDict, total=False):
     classification: ClassificationState
     recommendation: Recommendation
     errors: list[str]
+    blocked: bool
+    validation_summary: dict[str, Any]
 
 
 class ResponseFormatter(BaseModel):

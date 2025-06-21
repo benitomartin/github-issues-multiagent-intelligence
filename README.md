@@ -327,3 +327,6 @@ Individual Commands:
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+guardrails hub install hub://guardrails/toxic_language
+guardrails hub install hub://guardrails/detect_jailbreak

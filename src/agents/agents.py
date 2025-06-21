@@ -1,8 +1,112 @@
+import asyncio
+import re
+
+from guardrails import Guard
+
+# ========================================
+# Guardrail Agent
+# ========================================
+# async def guardrail_agent(state: IssueState) -> IssueState:
+#     try:
+#         input_text = f"{state.get('title', '')} {state.get('body', '')}"
+#         # Move blocking call to a thread
+#         def validate_guardrail() -> DetectJailbreak:
+#             return Guard().use(
+#                 DetectJailbreak,
+#                 threshold=0.8, # 0.8257520265137465
+#                 on_fail="filter",
+#             ).validate(input_text)
+#         result = await asyncio.to_thread(validate_guardrail)
+#         if not result.validation_passed:
+#             validation_summary = result.validation_summaries[0]
+#             validator_name= validation_summary.validator_name
+#             failure_reason = validation_summary.failure_reason
+#             score_match = re.search(r'Score: ([\d.]+)', failure_reason)
+#             score = float(score_match.group(1)) if score_match else None
+#             state["blocked"] = True
+#             state["validation_summary"] = {"failure_reason": validator_name,
+#                                            "score": score,
+#                                            }
+#         else:
+#             state["blocked"] = False
+#         return state
+#     except Exception as e:
+#         state.setdefault("errors", []).append(f"Guardrail error: {str(e)}")
+#         state["blocked"] = True
+#         return state
+from guardrails.hub import DetectJailbreak, ToxicLanguage
 from langchain_core.messages import AIMessage
 
 from src.agents.graph_service import services
 from src.models.agent_models import ClassificationState, IssueState, Recommendation
 from src.utils.promps import PromptTemplates
+
+
+async def guardrail_agent(state: IssueState) -> IssueState:
+    try:
+        input_text = f"{state.get('title', '')} {state.get('body', '')}"
+
+        def validate_jailbreak() -> DetectJailbreak:
+            return (
+                Guard()
+                .use(
+                    DetectJailbreak,
+                    threshold=0.8,
+                    on_fail="filter",
+                )
+                .validate(input_text)
+            )
+
+        def validate_toxic() -> ToxicLanguage:
+            return (
+                Guard()
+                .use(
+                    ToxicLanguage,
+                    threshold=0.5,
+                    validation_method="full",
+                    on_fail="filter",
+                )
+                .validate(input_text)
+            )
+
+        jailbreak_result = await asyncio.to_thread(validate_jailbreak)
+
+        if not jailbreak_result.validation_passed:
+            summary = jailbreak_result.validation_summaries[0]
+            score_match = re.search(r"Score: ([\d.]+)", summary.failure_reason)
+            score = float(score_match.group(1)) if score_match else None
+
+            state["blocked"] = True
+            state["validation_summary"] = {
+                "type": "DetectJailbreak",
+                "failure_reason": summary.validator_name,
+                "score": score,
+            }
+            return state
+
+        toxic_result = await asyncio.to_thread(validate_toxic)
+
+        if not toxic_result.validation_passed:
+            summary = toxic_result.validation_summaries[0]
+
+            state["blocked"] = True
+            state["validation_summary"] = {
+                "type": "ToxicLanguage",
+                "failure_reason": summary.failure_reason,
+                "error_spans": [
+                    {"start": span.start, "end": span.end, "reason": span.reason} for span in summary.error_spans
+                ],
+            }
+            return state
+
+        state["blocked"] = False
+        return state
+
+    except Exception as e:
+        state.setdefault("errors", []).append(f"Guardrail error: {str(e)}")
+        state["blocked"] = True
+        return state
+
 
 # ========================================
 # Vector Search Agent
