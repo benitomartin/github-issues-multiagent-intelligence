@@ -1,29 +1,29 @@
-from typing import Any, TypedDict
+from typing import Any
 
 from pydantic import BaseModel, Field
 
 
-class ClassificationState(TypedDict, total=False):
-    category: str
-    priority: str
-    labels: list[str]
-    assignee: str
+class ClassificationState(BaseModel):
+    category: str | None = None
+    priority: str | None = None
+    labels: list[str] | None = None
+    assignee: str | None = None
 
 
-class Recommendation(TypedDict, total=False):
-    summary: str
-    references: list[str]
+class Recommendation(BaseModel):
+    summary: str | None = None
+    references: list[str] | None = None
 
 
-class IssueState(TypedDict, total=False):
-    title: str
-    body: str
-    similar_issues: list[dict[str, Any]]
-    classification: ClassificationState
-    recommendation: Recommendation
-    errors: list[str]
-    blocked: bool
-    validation_summary: dict[str, Any]
+class IssueState(BaseModel):
+    title: str | None = None
+    body: str | None = None
+    similar_issues: list[dict[str, Any]] | None = None
+    classification: ClassificationState | None = None
+    recommendation: Recommendation | None = None
+    errors: list[str] | None = None
+    blocked: bool | None = None
+    validation_summary: dict[str, Any] | None = None
 
 
 class ResponseFormatter(BaseModel):

@@ -330,3 +330,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 guardrails hub install hub://guardrails/toxic_language
 guardrails hub install hub://guardrails/detect_jailbreak
+guardrails hub install hub://guardrails/secrets_present

@@ -1,7 +1,6 @@
-import asyncio
 import re
 
-from guardrails import Guard
+from guardrails import AsyncGuard
 from guardrails.hub import DetectJailbreak, ToxicLanguage
 from langchain_core.messages import AIMessage
 
@@ -10,17 +9,17 @@ from src.models.agent_models import ClassificationState, IssueState, Recommendat
 from src.utils.promps import PromptTemplates
 
 # ========================================
-# Guardrail Agent
+# Input Guardrail Agent
 # ========================================
 
 
-async def guardrail_agent(state: IssueState) -> IssueState:
+async def input_guardrail_agent(state: IssueState) -> IssueState:
     try:
-        input_text = f"{state.get('title', '')} {state.get('body', '')}"
+        input_text = f"{getattr(state, 'title', '')} {getattr(state, 'body', '')}"
 
         def validate_jailbreak() -> DetectJailbreak:
             return (
-                Guard()
+                AsyncGuard()
                 .use(
                     DetectJailbreak,
                     threshold=0.8,
@@ -31,7 +30,7 @@ async def guardrail_agent(state: IssueState) -> IssueState:
 
         def validate_toxic() -> ToxicLanguage:
             return (
-                Guard()
+                AsyncGuard()
                 .use(
                     ToxicLanguage,
                     threshold=0.5,
@@ -41,29 +40,29 @@ async def guardrail_agent(state: IssueState) -> IssueState:
                 .validate(input_text)
             )
 
-        jailbreak_result = await asyncio.to_thread(validate_jailbreak)
+        jailbreak_result = await validate_jailbreak()
 
         if not jailbreak_result.validation_passed:
             summary = jailbreak_result.validation_summaries[0]
             score_match = re.search(r"Score: ([\d.]+)", summary.failure_reason)
             score = float(score_match.group(1)) if score_match else None
 
-            state["blocked"] = True
-            state["validation_summary"] = {
+            state.blocked = True
+            state.validation_summary = {
                 "type": "DetectJailbreak",
                 "failure_reason": summary.validator_name,
                 "score": score,
             }
             return state
 
-        toxic_result = await asyncio.to_thread(validate_toxic)
+        toxic_result = await validate_toxic()
 
         if not toxic_result.validation_passed:
             summary = toxic_result.validation_summaries[0]
 
-            state["blocked"] = True
-            state["validation_summary"] = {
-                "type": "ToxicLanguage",
+            state.blocked = True
+            state.validation_summary = {
+                "type": "ToxicLanguage_Input",
                 "failure_reason": summary.failure_reason,
                 "error_spans": [
                     {"start": span.start, "end": span.end, "reason": span.reason} for span in summary.error_spans
@@ -71,23 +70,25 @@ async def guardrail_agent(state: IssueState) -> IssueState:
             }
             return state
 
-        state["blocked"] = False
+        state.blocked = False
         return state
 
     except Exception as e:
-        state.setdefault("errors", []).append(f"Guardrail error: {str(e)}")
-        state["blocked"] = True
+        if not hasattr(state, "errors") or state.errors is None:
+            state.errors = []
+        state.errors.append(f"Guardrail error: {str(e)}")
+        state.blocked = True
         return state
 
 
 # ========================================
-# Vector Search Agent
+# Issue Search Agent
 # ========================================
 
 
 async def issue_search_agent(state: IssueState) -> IssueState:
     try:
-        query_text = f"{state.get('title', '')} {state.get('body', '')}"
+        query_text = f"{getattr(state, 'title', '')} {getattr(state, 'body', '')}"
         results = await services.qdrant_store.search_similar_issues(query_text)
 
         similar_issues = [
@@ -107,11 +108,12 @@ async def issue_search_agent(state: IssueState) -> IssueState:
             if hit.payload is not None
         ]
 
-        state["similar_issues"] = similar_issues
+        state.similar_issues = similar_issues
         return state
-
     except Exception as e:
-        state.setdefault("errors", []).append(f"Async vector search error: {str(e)}")
+        if not hasattr(state, "errors") or state.errors is None:
+            state.errors = []
+        state.errors.append(f"Async vector search error: {str(e)}")
         return state
 
 
@@ -123,17 +125,20 @@ async def issue_search_agent(state: IssueState) -> IssueState:
 async def classification_agent(state: IssueState) -> IssueState:
     try:
         prompt = PromptTemplates.classification_prompt().format(
-            title=state["title"], body=state["body"], similar_issues=state["similar_issues"]
+            title=state.title, body=state.body, similar_issues=state.similar_issues
         )
 
         response: AIMessage = await services.llm_with_tools.ainvoke(prompt)  # type: ignore
         parsed = response.tool_calls[0]["args"]  # Parsed dict output
 
-        state["classification"] = ClassificationState(**dict(parsed))  # type: ignore
+        state.classification = ClassificationState(**dict(parsed))
+
         return state
 
     except Exception as e:
-        state.setdefault("errors", []).append(f"Classification error: {str(e)}")
+        if not hasattr(state, "errors") or state.errors is None:
+            state.errors = []
+        state.errors.append(f"Classification error: {str(e)}")
         return state
 
 
@@ -143,7 +148,8 @@ async def recommendation_agent(state: IssueState) -> IssueState:
         top_references = []
         seen_urls = set()
 
-        for issue in state.get("similar_issues", []):
+        similar_issues = getattr(state, "similar_issues", []) or []
+        for issue in similar_issues:
             url = issue["url"]
             if url not in seen_urls:
                 top_references.append(url)
@@ -151,7 +157,7 @@ async def recommendation_agent(state: IssueState) -> IssueState:
             if len(top_references) == 4:
                 break
 
-        prompt = PromptTemplates.summary_prompt(dict(state), top_references)
+        prompt = PromptTemplates.summary_prompt(state.dict(), top_references)
 
         response = await services.llm.ainvoke(prompt)
 
@@ -163,12 +169,66 @@ async def recommendation_agent(state: IssueState) -> IssueState:
         else:
             summary = str(response.content).strip()
 
-        state["recommendation"] = Recommendation(summary=summary, references=top_references)
+        state.recommendation = Recommendation(summary=summary, references=top_references)
 
         # logger.info(f"Recommendation summary: {summary}")
 
         return state
 
     except Exception as e:
-        state.setdefault("errors", []).append(f"Recommendation error: {str(e)}")
+        if not hasattr(state, "errors") or state.errors is None:
+            state.errors = []
+        state.errors.append(f"Recommendation error: {str(e)}")
+        return state
+
+
+# ========================================
+# Output Guardrail Agent
+# ========================================
+
+
+async def output_guardrail_agent(state: IssueState) -> IssueState:
+    try:
+        output_text = getattr(getattr(state, "recommendation", None), "summary", "")
+
+        if not output_text:
+            # No text to validate, consider not blocked or handle accordingly
+            state.blocked = False
+            return state
+
+        def validate_output_toxic() -> ToxicLanguage:
+            return (
+                AsyncGuard()
+                .use(
+                    ToxicLanguage,
+                    threshold=0.8,
+                    validation_method="full",
+                    on_fail="filter",
+                )
+                .validate(output_text)
+            )
+
+        toxic_result = await validate_output_toxic()
+
+        if not toxic_result.validation_passed:
+            summary = toxic_result.validation_summaries[0]
+
+            state.blocked = True
+            state.validation_summary = {
+                "type": "ToxicLanguage_Output",
+                "failure_reason": summary.failure_reason,
+                "error_spans": [
+                    {"start": span.start, "end": span.end, "reason": span.reason} for span in summary.error_spans
+                ],
+            }
+        else:
+            state.blocked = False
+
+        return state
+
+    except Exception as e:
+        if not hasattr(state, "errors") or state.errors is None:
+            state.errors = []
+        state.errors.append(f"Output Guardrail error: {str(e)}")
+        state.blocked = True
         return state

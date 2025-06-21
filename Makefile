@@ -13,7 +13,7 @@ endif
 include $(ENV_FILE)
 export
 
-.PHONY: docker-up docker-down all ruff mypy clean help
+.PHONY: docker-up docker-down all ruff mypy clean help tests
 
 APP_ENV ?= dev
 
@@ -97,10 +97,21 @@ query-graph: ## Query the graph
 ## Testing Commands
 #################################################################################
 
-tests: ## Run all tests
+all-tests: ## Run all tests
 	@echo "Running all tests..."
 	uv run pytest
 	@echo "All tests completed."
+
+unit-tests: ## Run only unit tests
+	@echo "Running unit tests..."
+	uv run pytest tests/unit
+	@echo "Unit tests completed."
+
+integration-tests: ## Run only integration tests
+	@echo "Running integration tests..."
+	uv run pytest tests/integration
+	@echo "Integration tests completed."
+
 
 ################################################################################
 ## Pre-commit Commands
@@ -115,7 +126,7 @@ pre-commit-run: ## Run pre-commit hooks
 ## Linting and Formatting
 ################################################################################
 
-all: ruff-lint mypy clean ## Run all linting and formatting commands
+all-lint-format: ruff-lint mypy clean ## Run all linting and formatting commands
 
 ruff-check: ## Check Ruff formatting
 	@echo "Checking Ruff formatting..."
