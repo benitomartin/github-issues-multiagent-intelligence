@@ -2,44 +2,16 @@ import asyncio
 import re
 
 from guardrails import Guard
-
-# ========================================
-# Guardrail Agent
-# ========================================
-# async def guardrail_agent(state: IssueState) -> IssueState:
-#     try:
-#         input_text = f"{state.get('title', '')} {state.get('body', '')}"
-#         # Move blocking call to a thread
-#         def validate_guardrail() -> DetectJailbreak:
-#             return Guard().use(
-#                 DetectJailbreak,
-#                 threshold=0.8, # 0.8257520265137465
-#                 on_fail="filter",
-#             ).validate(input_text)
-#         result = await asyncio.to_thread(validate_guardrail)
-#         if not result.validation_passed:
-#             validation_summary = result.validation_summaries[0]
-#             validator_name= validation_summary.validator_name
-#             failure_reason = validation_summary.failure_reason
-#             score_match = re.search(r'Score: ([\d.]+)', failure_reason)
-#             score = float(score_match.group(1)) if score_match else None
-#             state["blocked"] = True
-#             state["validation_summary"] = {"failure_reason": validator_name,
-#                                            "score": score,
-#                                            }
-#         else:
-#             state["blocked"] = False
-#         return state
-#     except Exception as e:
-#         state.setdefault("errors", []).append(f"Guardrail error: {str(e)}")
-#         state["blocked"] = True
-#         return state
 from guardrails.hub import DetectJailbreak, ToxicLanguage
 from langchain_core.messages import AIMessage
 
 from src.agents.graph_service import services
 from src.models.agent_models import ClassificationState, IssueState, Recommendation
 from src.utils.promps import PromptTemplates
+
+# ========================================
+# Guardrail Agent
+# ========================================
 
 
 async def guardrail_agent(state: IssueState) -> IssueState:
