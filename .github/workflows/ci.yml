@@ -48,6 +48,20 @@ jobs:
         run: |
           uv run alembic upgrade head
 
+      - name: Ingest GitHub Issues
+        run: |
+          echo "Ingesting GitHub issues..."
+          APP_ENV=dev uv run src/data_pipeline/ingestion.py
+        env:
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+          POSTGRES_HOST: ${{ secrets.POSTGRES_HOST }}
+          POSTGRES_PORT: ${{ secrets.POSTGRES_PORT }}
+          ISSUES_TABLE_NAME: ${{ secrets.ISSUES_TABLE_NAME }}
+          COMMENTS_TABLE_NAME: ${{ secrets.COMMENTS_TABLE_NAME }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+
       - name: Configure guardrails and install validators
         env:
           GUARDRAILS_API_KEY: ${{ secrets.GUARDRAILS_API_KEY }}
