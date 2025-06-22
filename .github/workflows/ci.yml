@@ -8,6 +8,21 @@ jobs:
   lint-and-test:
     runs-on: ubuntu-latest
 
+    services:
+      postgres:
+        image: postgres:13
+        env:
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U ${{ secrets.POSTGRES_USER }}"
+          --health-interval=5s
+          --health-timeout=3s
+          --health-retries=5
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -23,30 +38,24 @@ jobs:
       - name: Install dependencies
         run: uv sync --all-groups
 
-      - name: Create .env file for Docker
+      - name: Create .env file for services
         run: |
-          echo "POSTGRES_USER=${{ secrets.POSTGRES_USER }}" >> .env.ci
-          echo "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> .env.ci
-          echo "POSTGRES_DB=${{ secrets.POSTGRES_DB }}" >> .env.ci
-          echo "POSTGRES_PORT=${{ secrets.POSTGRES_PORT }}" >> .env.ci
-          echo "ADMINER_PORT=${{ secrets.ADMINER_PORT }}" >> .env.ci
-          echo "APP_ENV=dev" >> .env.ci
-
-      - name: Start Docker services
-        run: |
-          docker compose --env-file .env.ci -f docker/docker-compose.yml up -d
-
-      - name: Wait for PostgreSQL to be ready
-        run: |
-          timeout 60s bash -c 'until docker exec $(docker compose --env-file .env.ci -f docker/docker-compose.yml ps -q postgres) pg_isready -U ${{ secrets.POSTGRES_USER }}; do sleep 2; done'
-
-      - name: Check Alembic current migration state
-        run: |
-          uv run alembic current
+          echo "POSTGRES_USER=${{ secrets.POSTGRES_USER }}" > .env
+          echo "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> .env
+          echo "POSTGRES_DB=${{ secrets.POSTGRES_DB }}" >> .env
+          echo "POSTGRES_HOST=localhost" >> .env
+          echo "POSTGRES_PORT=5432" >> .env
+          echo "APP_ENV=dev" >> .env
 
       - name: Run Alembic migrations
         run: |
           uv run alembic upgrade head
+        env:
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+          POSTGRES_HOST: localhost
+          POSTGRES_PORT: 5432
 
       - name: Ingest GitHub Issues
         run: |
@@ -56,8 +65,8 @@ jobs:
           POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
           POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
           POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
-          POSTGRES_HOST: ${{ secrets.POSTGRES_HOST }}
-          POSTGRES_PORT: ${{ secrets.POSTGRES_PORT }}
+          POSTGRES_HOST: localhost
+          POSTGRES_PORT: 5432
           ISSUES_TABLE_NAME: ${{ secrets.ISSUES_TABLE_NAME }}
           COMMENTS_TABLE_NAME: ${{ secrets.COMMENTS_TABLE_NAME }}
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
@@ -89,8 +98,8 @@ jobs:
           POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
           POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
           POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
-          POSTGRES_HOST: ${{ secrets.POSTGRES_HOST }}
-          POSTGRES_PORT: ${{ secrets.POSTGRES_PORT }}
+          POSTGRES_HOST: localhost
+          POSTGRES_PORT: 5432
           ADMINER_PORT: ${{ secrets.ADMINER_PORT }}
           ISSUES_TABLE_NAME: ${{ secrets.ISSUES_TABLE_NAME }}
           COMMENTS_TABLE_NAME: ${{ secrets.COMMENTS_TABLE_NAME }}
