@@ -32,6 +32,8 @@ class Settings(BaseSettings):
     OPENAI_API_KEY: str = ""
     LLM_MODEL_NAME: str = "gpt-4o-mini"
     TEMPERATURE: float = 0
+    REPOS_CONFIG: str = "src/config/repos.yaml"
+    GUARDRAILS_CONFIG: str = "src/config/guardrails.yaml"
 
 
 # Determine environment first

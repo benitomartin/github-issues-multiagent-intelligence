@@ -1,7 +1,9 @@
 [project]
-name = "github-intelligence"
+name = "github-intelligence-env"
 version = "0.1.0"
-description = "Add your description here"
+description = """
+A Python package for GitHub Intelligence.
+"""
 readme = "README.md"
 authors = [
     {name = "Benito Martin"}
@@ -11,8 +13,9 @@ requires-python = ">=3.12"
 
 dependencies = [
     "alembic>=1.16.2",
+    "detect-secrets>=1.5.0",
     "fastembed-gpu>=0.7.1",
-    "guardrails-ai==0.6.6",
+    "guardrails-ai>=0.5.15",
     "guardrails-api-client>=0.4.0a1",
     "langchain>=0.3.26",
     "langchain-openai>=0.3.24",

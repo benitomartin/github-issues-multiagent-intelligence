@@ -43,3 +43,18 @@ async def test_toxic_content_detection_variations() -> None:
         state = IssueState(recommendation=Recommendation(summary=text, references=[]))
         result = await output_guardrail_agent(state)
         assert not getattr(result, "blocked", False), f"Expected pass: {text}"
+
+
+@pytest.mark.asyncio
+async def test_secret_detection_in_output() -> None:
+    secret_texts = [
+        "Here is the password: hunter2",
+        "AWS_SECRET_ACCESS_KEY=abc123xyz456",
+        "api_key: sk-live-abc123456789xyz",
+    ]
+
+    for text in secret_texts:
+        state = IssueState(recommendation=Recommendation(summary=text, references=[]))
+        result = await output_guardrail_agent(state)
+        assert result.blocked, f"Expected block: {text}"
+        assert result.validation_summary is not None and result.validation_summary["type"] == "SecretsPresent_Output"

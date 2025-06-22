@@ -13,7 +13,7 @@ endif
 include $(ENV_FILE)
 export
 
-.PHONY: docker-up docker-down all ruff mypy clean help tests
+.PHONY: docker-up docker-down all ruff mypy clean help
 
 APP_ENV ?= dev
 

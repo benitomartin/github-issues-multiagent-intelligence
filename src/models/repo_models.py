@@ -1,6 +1,8 @@
 import yaml
 from pydantic import BaseModel, Field
 
+from src.utils.config import settings
+
 
 class RepoConfig(BaseModel):
     owner: str
@@ -16,4 +18,4 @@ def load_repositories_from_yaml(path: str) -> list[RepoConfig]:
     return [RepoConfig(**repo) for repo in data]
 
 
-repositories = load_repositories_from_yaml("src/config/repos.yaml")
+repositories = load_repositories_from_yaml(settings.REPOS_CONFIG)

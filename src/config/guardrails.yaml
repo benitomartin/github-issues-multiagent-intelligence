@@ -1,0 +1,11 @@
+jailbreak:
+  threshold: 0.8
+  on_fail: "filter"
+
+toxicity:
+  threshold: 0.5
+  validation_method: "full"
+  on_fail: "filter"
+
+secrets:
+  on_fail: "filter"

@@ -43,8 +43,8 @@ def build_issue_workflow() -> StateGraph:
     return builder
 
 
-# For LangGraph Studio
-graph = build_issue_workflow().compile()
+# # # For LangGraph Studio
+# graph = build_issue_workflow().compile()
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run research graph with custom parameters")
@@ -52,7 +52,13 @@ if __name__ == "__main__":
     parser.add_argument(
         "--body",
         type=str,
-        default="You are an idiot",
+        default="""
+    def hello():
+        user_id = "1234"
+        user_pwd = "password1234"
+        user_api_key = "sk-xhdfgtest"
+
+    """,
         help="Issue Body",
     )
     args = parser.parse_args()
@@ -82,4 +88,7 @@ if __name__ == "__main__":
 
         return result
 
-    result = asyncio.run(main())
+    try:
+        result = asyncio.run(main())
+    except Exception as e:
+        logger.error(f"🔥 Unexpected workflow error: {e}")

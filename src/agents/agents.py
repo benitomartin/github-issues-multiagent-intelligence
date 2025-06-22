@@ -1,11 +1,11 @@
 import re
 
-from guardrails import AsyncGuard
-from guardrails.hub import DetectJailbreak, ToxicLanguage
 from langchain_core.messages import AIMessage
 
 from src.agents.graph_service import services
 from src.models.agent_models import ClassificationState, IssueState, Recommendation
+from src.utils.error_handler import ErrorHandler
+from src.utils.guardrails import guardrail_validator
 from src.utils.promps import PromptTemplates
 
 # ========================================
@@ -17,34 +17,12 @@ async def input_guardrail_agent(state: IssueState) -> IssueState:
     try:
         input_text = f"{getattr(state, 'title', '')} {getattr(state, 'body', '')}"
 
-        def validate_jailbreak() -> DetectJailbreak:
-            return (
-                AsyncGuard()
-                .use(
-                    DetectJailbreak,
-                    threshold=0.8,
-                    on_fail="filter",
-                )
-                .validate(input_text)
-            )
-
-        def validate_toxic() -> ToxicLanguage:
-            return (
-                AsyncGuard()
-                .use(
-                    ToxicLanguage,
-                    threshold=0.5,
-                    validation_method="full",
-                    on_fail="filter",
-                )
-                .validate(input_text)
-            )
-
-        jailbreak_result = await validate_jailbreak()
+        ## Jailbreak Guard
+        jailbreak_result = await guardrail_validator.check_jailbreak(input_text)
 
         if not jailbreak_result.validation_passed:
             summary = jailbreak_result.validation_summaries[0]
-            score_match = re.search(r"Score: ([\d.]+)", summary.failure_reason)
+            score_match = re.search(r"Score: ([\d.]+)", summary.failure_reason) if summary.failure_reason else None
             score = float(score_match.group(1)) if score_match else None
 
             state.blocked = True
@@ -55,7 +33,8 @@ async def input_guardrail_agent(state: IssueState) -> IssueState:
             }
             return state
 
-        toxic_result = await validate_toxic()
+        ## Toxic Guard
+        toxic_result = await guardrail_validator.check_toxicity(input_text)
 
         if not toxic_result.validation_passed:
             summary = toxic_result.validation_summaries[0]
@@ -65,20 +44,30 @@ async def input_guardrail_agent(state: IssueState) -> IssueState:
                 "type": "ToxicLanguage_Input",
                 "failure_reason": summary.failure_reason,
                 "error_spans": [
-                    {"start": span.start, "end": span.end, "reason": span.reason} for span in summary.error_spans
+                    {"start": span.start, "end": span.end, "reason": span.reason} for span in summary.error_spans or []
                 ],
             }
+
+            return state
+
+        # Secret Guard
+        secret_result = await guardrail_validator.check_secrets(input_text)
+
+        if not secret_result.validation_passed:
+            summary = secret_result.validation_summaries[0]
+
+            state.blocked = True
+            state.validation_summary = {
+                "type": "SecretsPresent_Input",
+                "failure_reason": summary.failure_reason,
+            }
+
             return state
 
         state.blocked = False
         return state
-
     except Exception as e:
-        if not hasattr(state, "errors") or state.errors is None:
-            state.errors = []
-        state.errors.append(f"Guardrail error: {str(e)}")
-        state.blocked = True
-        return state
+        return ErrorHandler.log_error(state, e, context="Guardrail error")
 
 
 # ========================================
@@ -110,11 +99,9 @@ async def issue_search_agent(state: IssueState) -> IssueState:
 
         state.similar_issues = similar_issues
         return state
+
     except Exception as e:
-        if not hasattr(state, "errors") or state.errors is None:
-            state.errors = []
-        state.errors.append(f"Async vector search error: {str(e)}")
-        return state
+        return ErrorHandler.log_error(state, e, context="Issue search error")
 
 
 # ========================================
@@ -136,10 +123,7 @@ async def classification_agent(state: IssueState) -> IssueState:
         return state
 
     except Exception as e:
-        if not hasattr(state, "errors") or state.errors is None:
-            state.errors = []
-        state.errors.append(f"Classification error: {str(e)}")
-        return state
+        return ErrorHandler.log_error(state, e, context="Classification error")
 
 
 async def recommendation_agent(state: IssueState) -> IssueState:
@@ -176,10 +160,7 @@ async def recommendation_agent(state: IssueState) -> IssueState:
         return state
 
     except Exception as e:
-        if not hasattr(state, "errors") or state.errors is None:
-            state.errors = []
-        state.errors.append(f"Recommendation error: {str(e)}")
-        return state
+        return ErrorHandler.log_error(state, e, context="Recommendation error")
 
 
 # ========================================
@@ -196,39 +177,35 @@ async def output_guardrail_agent(state: IssueState) -> IssueState:
             state.blocked = False
             return state
 
-        def validate_output_toxic() -> ToxicLanguage:
-            return (
-                AsyncGuard()
-                .use(
-                    ToxicLanguage,
-                    threshold=0.8,
-                    validation_method="full",
-                    on_fail="filter",
-                )
-                .validate(output_text)
-            )
-
-        toxic_result = await validate_output_toxic()
+        # Toxic Guard
+        toxic_result = await guardrail_validator.check_toxicity(output_text)
 
         if not toxic_result.validation_passed:
             summary = toxic_result.validation_summaries[0]
-
             state.blocked = True
             state.validation_summary = {
                 "type": "ToxicLanguage_Output",
                 "failure_reason": summary.failure_reason,
                 "error_spans": [
-                    {"start": span.start, "end": span.end, "reason": span.reason} for span in summary.error_spans
+                    {"start": span.start, "end": span.end, "reason": span.reason} for span in summary.error_spans or []
                 ],
             }
-        else:
-            state.blocked = False
+            return state
 
+        # Secret Guard
+        secret_result = await guardrail_validator.check_secrets(output_text)
+
+        if not secret_result.validation_passed:
+            summary = secret_result.validation_summaries[0]
+            state.blocked = True
+            state.validation_summary = {
+                "type": "SecretsPresent_Output",
+                "failure_reason": summary.failure_reason,
+            }
+            return state
+
+        state.blocked = False
         return state
 
     except Exception as e:
-        if not hasattr(state, "errors") or state.errors is None:
-            state.errors = []
-        state.errors.append(f"Output Guardrail error: {str(e)}")
-        state.blocked = True
-        return state
+        return ErrorHandler.log_error(state, e, context="Output Guardrail error")

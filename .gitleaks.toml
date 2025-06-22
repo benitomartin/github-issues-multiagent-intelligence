@@ -1,0 +1,9 @@
+title = "gitleaks config"
+
+[allowlist]
+description = "Ignore mock secrets in test files"
+paths = [
+    "tests/.*",
+    "test_.*",
+    "^test_.*"
+]
