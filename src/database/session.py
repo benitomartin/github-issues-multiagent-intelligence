@@ -1,60 +1,73 @@
-# from sqlalchemy import create_engine
-# from sqlalchemy.orm import Session, sessionmaker
-
-# from src.utils.config import settings
-
-# DATABASE_URL = (
-#     f"postgresql+psycopg2://{settings.POSTGRES_USER}:{settings.POSTGRES_PASSWORD}"
-#     f"@{settings.POSTGRES_HOST}:{settings.POSTGRES_PORT}/{settings.POSTGRES_DB}"
-# )
-
-# engine = create_engine(DATABASE_URL, echo=False)
-# SessionLocal = sessionmaker(bind=engine)
-
-
-# def get_session() -> Session:
-#     return SessionLocal()
-
+import json
 import os
+from collections.abc import Generator
+from contextlib import contextmanager
 
+import boto3
 from sqlalchemy import create_engine
+from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session, sessionmaker
 
+from src.models.db_models import DBConfig
 from src.utils.config import settings
 
 
-# Only import boto3 if needed (avoid importing in dev/staging)
-def get_db_credentials_from_aws(secret_name: str, region_name: str = "eu-central-1") -> dict:
-    import json
-
-    import boto3
-
+def get_db_credentials_from_aws(secret_name: str, region_name: str) -> dict:
     client = boto3.client("secretsmanager", region_name=region_name)
     response = client.get_secret_value(SecretId=secret_name)
     return json.loads(response["SecretString"])
 
 
-# Detect environment
-app_env = os.getenv("APP_ENV", "dev").lower()
+class DB:
+    def __init__(self, config: DBConfig | None = None) -> None:
+        self.engine: Engine | None = None
+        self.SessionLocal: sessionmaker | None = None
+        self._init_db(config)
 
-if app_env == "prod":
-    creds = get_db_credentials_from_aws(settings.SECRET_NAME)
-    print(f"creds: {creds}")
-    DATABASE_URL = (
-        f"postgresql+psycopg2://{creds['username']}:{creds['password']}@{creds['host']}:{creds['port']}/{creds['dbname']}"
-    )
-    print(f"DATABASE_URL: {DATABASE_URL}")
-else:
-    # Use settings loaded from .env
-    DATABASE_URL = (
-        f"postgresql+psycopg2://{settings.POSTGRES_USER}:{settings.POSTGRES_PASSWORD}"
-        f"@{settings.POSTGRES_HOST}:{settings.POSTGRES_PORT}/{settings.POSTGRES_DB}"
-    )
+    def _init_db(self, config: DBConfig | None) -> None:
+        if config is None:
+            app_env = os.getenv("APP_ENV", "dev").lower()
+            if app_env == "prod":
+                creds = get_db_credentials_from_aws(settings.SECRET_NAME, settings.AWS_REGION)
+                config = DBConfig(
+                    username=creds["username"],
+                    password=creds["password"],
+                    host=creds["host"],
+                    port=int(creds["port"]),
+                    dbname=creds["dbname"],
+                )
+            else:
+                config = DBConfig(
+                    username=settings.POSTGRES_USER,
+                    password=settings.POSTGRES_PASSWORD,
+                    host=settings.POSTGRES_HOST,
+                    port=int(settings.POSTGRES_PORT),
+                    dbname=settings.POSTGRES_DB,
+                )
 
-# Initialize SQLAlchemy
-engine = create_engine(DATABASE_URL, echo=True)
-SessionInit = sessionmaker(bind=engine)
+        db_url = config.build_url()
+        self.engine = create_engine(db_url, echo=True)
+        self.SessionLocal = sessionmaker(bind=self.engine)
+
+    def get_session(self) -> Session:
+        """Create and return a new Session instance."""
+        if self.SessionLocal is None:
+            raise RuntimeError("SessionLocal is not initialized.")
+        return self.SessionLocal()
+
+    @contextmanager
+    def session_scope(self) -> Generator[Session, None, None]:
+        """Provide a transactional scope around a series of operations."""
+        session = self.get_session()
+        try:
+            yield session
+            session.commit()
+        except Exception:
+            session.rollback()
+            raise
+        finally:
+            session.close()
 
 
-def get_session() -> Session:
-    return SessionInit()
+# usage example
+db = DB()

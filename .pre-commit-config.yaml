@@ -59,6 +59,13 @@ repos:
       - id: gitleaks
         args: ["--config=.gitleaks.toml"]
 
+  - repo: local
+    hooks:
+      - id: lint-makefile
+        name: Lint Makefile for missing help comments
+        entry: scripts/lint-makefile.sh
+        language: script
+        files: ^Makefile$
 
   # - repo: local
   #   hooks:
@@ -68,11 +75,3 @@ repos:
   #       language: system
   #       types: [python]
   #       pass_filenames: false
-
-  - repo: local
-    hooks:
-      - id: lint-makefile
-        name: Lint Makefile for missing help comments
-        entry: scripts/lint-makefile.sh
-        language: script
-        files: ^Makefile$

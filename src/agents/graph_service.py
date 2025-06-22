@@ -4,7 +4,7 @@ from langchain_openai import ChatOpenAI
 
 from src.models.agent_models import ResponseFormatter
 from src.utils.config import settings
-from src.vectorstore.qdrant_store_async import AsyncQdrantVectorStore
+from src.vectorstore.qdrant_store import AsyncQdrantVectorStore
 
 
 class AgentServices:

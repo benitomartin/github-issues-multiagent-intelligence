@@ -11,6 +11,7 @@ class Settings(BaseSettings):
         env_file_encoding="utf-8",
     )
 
+    AWS_REGION: str = "eu-central-1"
     GITHUB_TOKEN: str = ""
     ISSUES_TABLE_NAME: str = "issues"
     COMMENTS_TABLE_NAME: str = "comments"
@@ -28,6 +29,9 @@ class Settings(BaseSettings):
     DENSE_MODEL_NAME: str = "BAAI/bge-large-en-v1.5"
     SPARSE_MODEL_NAME: str = "Qdrant/minicoil-v1"
     COLLECTION_NAME: str = "github_issues_embeddings"
+    CHUNK_SIZE: int = 1000
+    BATCH_SIZE: int = 20
+    CONCURRENT_COMMENTS: int = 5
     LANGSMITH_API_KEY: str = ""
     OPENAI_API_KEY: str = ""
     LLM_MODEL_NAME: str = "gpt-4o-mini"

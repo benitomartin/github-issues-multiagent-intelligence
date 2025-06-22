@@ -75,11 +75,6 @@ ingest-embeddings: ## Ingest embeddings into Qdrant
 	APP_ENV=$(APP_ENV) uv run src/vectorstore/ingest_embeddings.py
 	@echo "Embeddings ingested successfully."
 
-ingest-embeddings-async: ## Ingest embeddings into Qdrant
-	@echo "Ingesting embeddings into Qdrant for $(APP_ENV)..."
-	APP_ENV=$(APP_ENV) uv run src/vectorstore/ingest_embeddings_async.py
-	@echo "Embeddings ingested successfully."
-
 vector-test: ## Test vector search
 	APP_ENV=$(APP_ENV) uv run src/vectorstore/vectorstore_test.py
 
@@ -99,17 +94,17 @@ query-graph: ## Query the graph
 
 all-tests: ## Run all tests
 	@echo "Running all tests..."
-	uv run pytest
+	APP_ENV=$(APP_ENV) uv run pytest
 	@echo "All tests completed."
 
 unit-tests: ## Run only unit tests
 	@echo "Running unit tests..."
-	uv run pytest tests/unit
+	APP_ENV=$(APP_ENV) uv run pytest tests/unit
 	@echo "Unit tests completed."
 
 integration-tests: ## Run only integration tests
 	@echo "Running integration tests..."
-	uv run pytest tests/integration
+	APP_ENV=$(APP_ENV) uv run pytest tests/integration
 	@echo "Integration tests completed."
 
 

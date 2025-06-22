@@ -2,7 +2,7 @@
 #   repo: pandas
 #   state: all
 #   per_page: 100
-#   max_pages: 2
+#   max_pages: 1
 
 - owner: scikit-learn
   repo: scikit-learn

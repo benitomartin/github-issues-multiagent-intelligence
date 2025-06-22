@@ -1,10 +1,12 @@
-from src.vectorstore.qdrant_store import QdrantVectorStore
+import asyncio
+
+from src.vectorstore.qdrant_store import AsyncQdrantVectorStore
 
 
-def main() -> None:
-    vectorstore = QdrantVectorStore()
-    vectorstore.create_collection()
+async def main() -> None:
+    vectorstore = AsyncQdrantVectorStore()
+    await vectorstore.create_collection()
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
