@@ -1,4 +1,4 @@
-name: CI Pipeline
+name: CI
 on:
   push:
     branches:
@@ -22,6 +22,23 @@ jobs:
 
       - name: Install dependencies
         run: uv sync --all-groups
+
+      - name: Create .env file for Docker
+        run: |
+          echo "POSTGRES_USER=${{ secrets.POSTGRES_USER }}" >> .env.ci
+          echo "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> .env.ci
+          echo "POSTGRES_DB=${{ secrets.POSTGRES_DB }}" >> .env.ci
+          echo "POSTGRES_PORT=${{ secrets.POSTGRES_PORT }}" >> .env.ci
+          echo "ADMINER_PORT=${{ secrets.ADMINER_PORT }}" >> .env.ci
+          echo "APP_ENV=ci" >> .env.ci
+
+      - name: Start Docker services
+        run: |
+          docker-compose --env-file .env.ci -f docker/docker-compose.yml up -d
+
+      - name: Wait for PostgreSQL to be ready
+        run: |
+          timeout 60s bash -c 'until docker exec $(docker-compose --env-file .env.ci -f docker/docker-compose.yml ps -q postgres) pg_isready -U ${{ secrets.POSTGRES_USER }}; do sleep 2; done'
 
       - name: Configure guardrails and install validators
         env:
@@ -50,7 +67,7 @@ jobs:
           POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
           POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
           POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
-          POSTGRES_HOST: ${{ secrets.POSTGRES_HOST }}
+          POSTGRES_HOST: localhost  # Docker service will be on localhost in CI
           POSTGRES_PORT: ${{ secrets.POSTGRES_PORT }}
           ADMINER_PORT: ${{ secrets.ADMINER_PORT }}
           ISSUES_TABLE_NAME: ${{ secrets.ISSUES_TABLE_NAME }}
@@ -72,3 +89,8 @@ jobs:
           GUARDRAILS_CONFIG: ${{ secrets.GUARDRAILS_CONFIG }}
           GUARDRAILS_API_KEY: ${{ secrets.GUARDRAILS_API_KEY }}
         run: uv run pytest
+
+      - name: Stop Docker services
+        if: always()  # Run even if tests fail
+        run: |
+          docker-compose --env-file .env.ci -f docker/docker-compose.yml down -v
