@@ -40,6 +40,14 @@ jobs:
         run: |
           timeout 60s bash -c 'until docker exec $(docker compose --env-file .env.ci -f docker/docker-compose.yml ps -q postgres) pg_isready -U ${{ secrets.POSTGRES_USER }}; do sleep 2; done'
 
+      - name: Check Alembic current migration state
+        run: |
+          uv run alembic current
+
+      - name: Run Alembic migrations
+        run: |
+          uv run alembic upgrade head
+
       - name: Configure guardrails and install validators
         env:
           GUARDRAILS_API_KEY: ${{ secrets.GUARDRAILS_API_KEY }}
@@ -67,7 +75,7 @@ jobs:
           POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
           POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
           POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
-          POSTGRES_HOST: localhost  # Docker service will be on localhost in CI
+          POSTGRES_HOST: ${{ secrets.POSTGRES_HOST }}
           POSTGRES_PORT: ${{ secrets.POSTGRES_PORT }}
           ADMINER_PORT: ${{ secrets.ADMINER_PORT }}
           ISSUES_TABLE_NAME: ${{ secrets.ISSUES_TABLE_NAME }}
