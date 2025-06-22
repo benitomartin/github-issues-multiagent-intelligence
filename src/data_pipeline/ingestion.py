@@ -205,11 +205,11 @@ if __name__ == "__main__":
 
     db = DB()  # Create DB instance
 
-    GITHUB_TOKEN = settings.GITHUB_TOKEN
-    if not GITHUB_TOKEN:
+    GH_TOKEN = settings.GH_TOKEN
+    if not GH_TOKEN:
         logger.warning("No GitHub token provided. Rate limits may be low.")
 
-    collector = GitHubIssuesCollector(db=db, token=GITHUB_TOKEN)
+    collector = GitHubIssuesCollector(db=db, token=GH_TOKEN)
 
     for repo_cfg in repositories:
         logger.info(f"\n{'=' * 50}\nCollecting issues from {repo_cfg.owner}/{repo_cfg.repo}...\n{'=' * 50}")
