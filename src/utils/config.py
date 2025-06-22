@@ -12,7 +12,7 @@ class Settings(BaseSettings):
     )
 
     AWS_REGION: str = "eu-central-1"
-    GITHUB_TOKEN: str = ""
+    GH_TOKEN: str = ""
     ISSUES_TABLE_NAME: str = "issues"
     COMMENTS_TABLE_NAME: str = "comments"
     POSTGRES_USER: str = ""
