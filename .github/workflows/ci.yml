@@ -8,32 +8,6 @@ on:
 jobs:
   lint-and-test:
     runs-on: ubuntu-latest
-    env:
-      AWS_REGION: ${{ secrets.AWS_REGION }}
-      GH_TOKEN: ${{ secrets.GH_TOKEN }}
-      POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
-      POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
-      POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
-      POSTGRES_HOST: ${{ secrets.POSTGRES_HOST }}
-      POSTGRES_PORT: ${{ secrets.POSTGRES_PORT }}
-      ADMINER_PORT: ${{ secrets.ADMINER_PORT }}
-      ISSUES_TABLE_NAME: ${{ secrets.ISSUES_TABLE_NAME }}
-      COMMENTS_TABLE_NAME: ${{ secrets.COMMENTS_TABLE_NAME }}
-      DENSE_MODEL_NAME: ${{ secrets.DENSE_MODEL_NAME }}
-      SPARSE_MODEL_NAME: ${{ secrets.SPARSE_MODEL_NAME }}
-      LEN_EMBEDDINGS: ${{ secrets.LEN_EMBEDDINGS }}
-      QDRANT_API_KEY: ${{ secrets.QDRANT_API_KEY }}
-      QDRANT_URL: ${{ secrets.QDRANT_URL }}
-      COLLECTION_NAME: ${{ secrets.COLLECTION_NAME }}
-      CHUNK_SIZE: ${{ secrets.CHUNK_SIZE }}
-      BATCH_SIZE: ${{ secrets.BATCH_SIZE }}
-      CONCURRENT_COMMENTS: ${{ secrets.CONCURRENT_COMMENTS }}
-      LANGSMITH_API_KEY: ${{ secrets.LANGSMITH_API_KEY }}
-      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-      LLM_MODEL_NAME: ${{ secrets.LLM_MODEL_NAME }}
-      TEMPERATURE: ${{ secrets.TEMPERATURE }}
-      REPOS_CONFIG: ${{ secrets.REPOS_CONFIG }}
-      GUARDRAILS_CONFIG: ${{ secrets.GUARDRAILS_CONFIG }}
 
     steps:
       - name: Checkout code
@@ -63,4 +37,30 @@ jobs:
 
 
       - name: Run tests
+        env:
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+          POSTGRES_HOST: ${{ secrets.POSTGRES_HOST }}
+          POSTGRES_PORT: ${{ secrets.POSTGRES_PORT }}
+          ADMINER_PORT: ${{ secrets.ADMINER_PORT }}
+          ISSUES_TABLE_NAME: ${{ secrets.ISSUES_TABLE_NAME }}
+          COMMENTS_TABLE_NAME: ${{ secrets.COMMENTS_TABLE_NAME }}
+          DENSE_MODEL_NAME: ${{ secrets.DENSE_MODEL_NAME }}
+          SPARSE_MODEL_NAME: ${{ secrets.SPARSE_MODEL_NAME }}
+          LEN_EMBEDDINGS: ${{ secrets.LEN_EMBEDDINGS }}
+          QDRANT_API_KEY: ${{ secrets.QDRANT_API_KEY }}
+          QDRANT_URL: ${{ secrets.QDRANT_URL }}
+          COLLECTION_NAME: ${{ secrets.COLLECTION_NAME }}
+          CHUNK_SIZE: ${{ secrets.CHUNK_SIZE }}
+          BATCH_SIZE: ${{ secrets.BATCH_SIZE }}
+          CONCURRENT_COMMENTS: ${{ secrets.CONCURRENT_COMMENTS }}
+          LANGSMITH_API_KEY: ${{ secrets.LANGSMITH_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          LLM_MODEL_NAME: ${{ secrets.LLM_MODEL_NAME }}
+          TEMPERATURE: ${{ secrets.TEMPERATURE }}
+          REPOS_CONFIG: ${{ secrets.REPOS_CONFIG }}
+          GUARDRAILS_CONFIG: ${{ secrets.GUARDRAILS_CONFIG }}
         run: uv run pytest
