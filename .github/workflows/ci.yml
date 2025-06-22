@@ -34,11 +34,11 @@ jobs:
 
       - name: Start Docker services
         run: |
-          docker-compose --env-file .env.ci -f docker/docker-compose.yml up -d
+          docker compose --env-file .env.ci -f docker/docker-compose.yml up -d
 
       - name: Wait for PostgreSQL to be ready
         run: |
-          timeout 60s bash -c 'until docker exec $(docker-compose --env-file .env.ci -f docker/docker-compose.yml ps -q postgres) pg_isready -U ${{ secrets.POSTGRES_USER }}; do sleep 2; done'
+          timeout 60s bash -c 'until docker exec $(docker compose --env-file .env.ci -f docker/docker-compose.yml ps -q postgres) pg_isready -U ${{ secrets.POSTGRES_USER }}; do sleep 2; done'
 
       - name: Configure guardrails and install validators
         env:
@@ -93,4 +93,4 @@ jobs:
       - name: Stop Docker services
         if: always()  # Run even if tests fail
         run: |
-          docker-compose --env-file .env.ci -f docker/docker-compose.yml down -v
+          docker compose --env-file .env.ci -f docker/docker-compose.yml down -v
