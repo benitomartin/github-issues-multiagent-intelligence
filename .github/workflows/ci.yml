@@ -30,7 +30,7 @@ jobs:
           echo "POSTGRES_DB=${{ secrets.POSTGRES_DB }}" >> .env.ci
           echo "POSTGRES_PORT=${{ secrets.POSTGRES_PORT }}" >> .env.ci
           echo "ADMINER_PORT=${{ secrets.ADMINER_PORT }}" >> .env.ci
-          echo "APP_ENV=ci" >> .env.ci
+          echo "APP_ENV=dev" >> .env.ci
 
       - name: Start Docker services
         run: |
