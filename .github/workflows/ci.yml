@@ -1,5 +1,4 @@
 name: CI
-
 on:
   push:
     branches:
@@ -24,6 +23,15 @@ jobs:
       - name: Install dependencies
         run: uv sync --all-groups
 
+      - name: Configure guardrails and install validators
+        env:
+          GUARDRAILS_API_KEY: ${{ secrets.GUARDRAILS_API_KEY }}
+        run: |
+          uv run guardrails configure --token $GUARDRAILS_API_KEY --disable-metrics --enable-remote-inferencing
+          uv run guardrails hub install hub://guardrails/toxic_language
+          uv run guardrails hub install hub://guardrails/detect_jailbreak
+          uv run guardrails hub install hub://guardrails/secrets_present
+
       - name: Format Check
         run: |
           uv run ruff format --check .
@@ -34,7 +42,6 @@ jobs:
 
       - name: Type check with mypy
         run: uv run mypy
-
 
       - name: Run tests
         env:
@@ -63,4 +70,5 @@ jobs:
           TEMPERATURE: ${{ secrets.TEMPERATURE }}
           REPOS_CONFIG: ${{ secrets.REPOS_CONFIG }}
           GUARDRAILS_CONFIG: ${{ secrets.GUARDRAILS_CONFIG }}
+          GUARDRAILS_API_KEY: ${{ secrets.GUARDRAILS_API_KEY }}
         run: uv run pytest
