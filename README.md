@@ -15,6 +15,7 @@
     - [AWS CDK](#aws-cdk)
     - [Testing](#testing)
   - [License](#license)
+- [API](#api)
 
 ## Overview
 
@@ -331,3 +332,19 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 guardrails hub install hub://guardrails/toxic_language
 guardrails hub install hub://guardrails/detect_jailbreak
 guardrails hub install hub://guardrails/secrets_present
+
+# API
+
+Swagger
+{
+"title": "Test Issue",
+"body": "def hello():\\n user_id = "1234"\\n user_pwd = "password1234"\\n user_api_key = "sk-xhdfgtest""
+}
+
+CURL
+curl -X POST "http://localhost:8000/process-issue" \
+-H "Content-Type: application/json" \
+-d '{
+"title": "Test Issue",
+"body": "def hello():\\n user_id = "1234"\\n user_pwd = "password1234"\\n user_api_key = "sk-xhdfgtest""
+}'

@@ -15,7 +15,9 @@ from src.utils.promps import PromptTemplates
 
 async def input_guardrail_agent(state: IssueState) -> IssueState:
     try:
-        input_text = f"{getattr(state, 'title', '')} {getattr(state, 'body', '')}"
+        input_text = f"{getattr(state, 'title', '')}\n{getattr(state, 'body', '')}"
+        # from loguru import logger
+        # logger.info(f"Input text to guardrails:\n{input_text}")
 
         ## Jailbreak Guard
         jailbreak_result = await guardrail_validator.check_jailbreak(input_text)

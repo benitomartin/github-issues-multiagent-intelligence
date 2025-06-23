@@ -14,6 +14,7 @@ requires-python = ">=3.12"
 dependencies = [
     "alembic>=1.16.2",
     "detect-secrets>=1.5.0",
+    "fastapi>=0.115.13",
     "fastembed-gpu>=0.7.1",
     "guardrails-ai>=0.5.15",
     "guardrails-api-client>=0.4.0a1",
@@ -28,6 +29,7 @@ dependencies = [
     "qdrant-client>=1.14.3",
     "requests>=2.32.4",
     "sqlalchemy>=2.0.41",
+    "uvicorn>=0.34.3",
 ]
 
 [dependency-groups]
