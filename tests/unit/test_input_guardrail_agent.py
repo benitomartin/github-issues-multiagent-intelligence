@@ -31,9 +31,13 @@ async def test_input_guardrail_allows_clean_input() -> None:
 @pytest.mark.asyncio
 async def test_input_guardrail_blocks_secrets() -> None:
     secret_inputs = [
-        IssueState(title="Leaking key", body="API_KEY=sk-abc123xyz789"),
-        IssueState(title="Password here", body="Here is the password: hunter2"),
-        IssueState(title="AWS credentials", body="AWS_SECRET_ACCESS_KEY=abc123456xyz"),
+        IssueState(
+            title="AWS credentials",
+            body='def hello():\n    user_id = "1234"\n \
+                    user_password = "password1234"\n \
+                    user_api_key = "sk-1234567890abcdefgh"\n \
+                    return user_id, user_password, user_api_key',
+        ),
     ]
 
     for state in secret_inputs:

@@ -56,9 +56,9 @@ async def test_get_health_ready_and_process_issue() -> None:
         toxic_request = IssueRequest(
             title="Secret in comment",
             body='def hello():\n    user_id = "1234"\n \
-                                                                        user_password = "password1234"\n \
-                                                                        user_api_key = "sk-1234567890abcdefgh"\n \
-                                                                        return user_id, user_password, user_api_key',
+                    user_password = "password1234"\n \
+                    user_api_key = "sk-1234567890abcdefgh"\n \
+                    return user_id, user_password, user_api_key',
         )
         process_resp_toxic = await ac.post("/process-issue", json=toxic_request.model_dump())
         assert process_resp_toxic.status_code == 200
