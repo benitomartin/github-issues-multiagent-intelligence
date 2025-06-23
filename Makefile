@@ -21,6 +21,12 @@ APP_ENV ?= dev
 ## Docker
 #################################################################################
 
+docker-build: ## Build the Docker image
+	@echo "Building Docker image .."
+	docker build --build-arg APP_ENV=$(APP_ENV) --build-arg GUARDRAILS_HUB_API_KEY=$(GUARDRAILS_HUB_API_KEY) -t github-issues -f docker/Dockerfile .
+	@echo "Docker image github-issues built."
+
+
 docker-up: ## Start Docker containers
 	@echo "Starting Docker containers with $(ENV_FILE)..."
 	docker-compose --env-file $(ENV_FILE) -f docker/docker-compose.yml up -d

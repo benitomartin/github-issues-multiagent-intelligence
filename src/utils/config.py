@@ -38,6 +38,7 @@ class Settings(BaseSettings):
     TEMPERATURE: float = 0
     REPOS_CONFIG: str = "src/config/repos.yaml"
     GUARDRAILS_CONFIG: str = "src/config/guardrails.yaml"
+    GUARDRAILS_HUB_API_KEY: str = ""
 
 
 # Determine environment first

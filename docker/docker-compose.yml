@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   postgres:
     image: postgres:latest
@@ -26,6 +24,19 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+
+  web:
+    image: github-issues
+    command: uvicorn src.api.main:app --host 0.0.0.0 --reload --port 8000 --log-level info
+    ports:
+      - "8000:8000"
+
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - GUARDRAILS_HUB_API_KEY=${GUARDRAILS_HUB_API_KEY}
+
+    volumes:
+      - ../src:/app/src  # Mount local source into container
 
 volumes:
   db_data:
