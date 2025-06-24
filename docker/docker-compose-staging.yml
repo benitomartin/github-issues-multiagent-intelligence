@@ -1,0 +1,63 @@
+# docker-compose.yml
+services:
+  postgres:
+    image: postgres:latest
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "${POSTGRES_PORT}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - "${ADMINER_PORT}:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  app:
+    build:
+      context: ..
+      dockerfile: docker/staging.Dockerfile
+      args:
+        GUARDRAILS_API_KEY: ${GUARDRAILS_API_KEY}
+    ports:
+      - "8000:8000"
+    environment:
+      - GUARDRAILS_API_KEY=${GUARDRAILS_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_PORT=${POSTGRES_PORT}
+      - ADMINER_PORT=${ADMINER_PORT}
+      - APP_ENV=${APP_ENV}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - packages:/app/.venv/lib/python3.12/site-packages
+      # - guardrails_data:/app/.venv/lib/python3.12/site-packages/guardrails
+      # - detox:/app/.venv/lib/python3.12/site-packages/detoxify
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+    name: db_data_${APP_ENV}
+  packages:
+    name: packages_${APP_ENV}
+  # guardrails_data:
+  #   name: guardrails_data_${APP_ENV}
+  # detox:
+  #   name: detox_${APP_ENV}

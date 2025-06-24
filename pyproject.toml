@@ -13,12 +13,12 @@ requires-python = ">=3.12,<3.13"
 
 dependencies = [
     "alembic>=1.16.2",
-    "cached-path>=1.7.3",
-    "detect-secrets>=1.5.0",
-    "detoxify>=0.5.2",
+    # "cached-path>=1.7.3",
+    # "detect-secrets>=1.5.0",
+    # "detoxify>=0.5.2",
     "fastapi>=0.115.13",
     "fastembed>=0.7.1",
-    "fastembed-gpu>=0.7.1",
+    # "fastembed-gpu>=0.7.1",
     "guardrails-ai>=0.5.15",
     "guardrails-api-client>=0.3.13,<0.4.0",
     "langchain>=0.3.26",
@@ -34,7 +34,9 @@ dependencies = [
     "requests>=2.32.4",
     "sqlalchemy>=2.0.41",
     "uvicorn>=0.34.3",
-     "boto3>=1.38.41",
+    "boto3>=1.38.41",
+    "detect-secrets>=1.5.0",
+    "cached-path>=1.7.3",
 ]
 
 [dependency-groups]
