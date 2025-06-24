@@ -16,25 +16,27 @@ export
 .PHONY: docker-up docker-down all ruff mypy clean help
 
 APP_ENV ?= dev
-
+GUARDRAILS_API_KEY?=
 #################################################################################
 ## Docker
 #################################################################################
 
-docker-build: ## Build the Docker image
-	@echo "Building Docker image .."
-	docker build --build-arg APP_ENV=$(APP_ENV) --build-arg GUARDRAILS_HUB_API_KEY=$(GUARDRAILS_HUB_API_KEY) -t github-issues -f docker/Dockerfile .
+docker-build: ## Build the Docker image for the 'app' service
+	@echo "Building Docker image for 'app' service.."
+	COMPOSE_BAKE=true docker compose -f docker/docker-compose.yml build \
+        --build-arg APP_ENV=$(APP_ENV) \
+        --build-arg GUARDRAILS_API_KEY=$(GUARDRAILS_API_KEY) \
+        app
 	@echo "Docker image github-issues built."
-
 
 docker-up: ## Start Docker containers
 	@echo "Starting Docker containers with $(ENV_FILE)..."
-	docker-compose --env-file $(ENV_FILE) -f docker/docker-compose.yml up -d
+	docker compose --env-file $(ENV_FILE) -f docker/docker-compose.yml up -d
 	@echo "Docker containers started."
 
 docker-down: ## Stop and remove Docker containers
 	@echo "Stopping Docker containers..."
-	docker-compose --env-file $(ENV_FILE) -f docker/docker-compose.yml down
+	docker compose --env-file $(ENV_FILE) -f docker/docker-compose.yml down
 	@echo "Docker containers stopped."
 
 #################################################################################

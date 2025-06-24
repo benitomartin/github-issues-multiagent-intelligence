@@ -46,9 +46,9 @@ tmp/
 
 # Documentation
 docs/
-README.md
-CHANGELOG.md
-LICENSE
+# README.md
+# CHANGELOG.md
+# LICENSE
 
 # Test data
 images/

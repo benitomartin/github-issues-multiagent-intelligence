@@ -9,32 +9,36 @@ authors = [
     {name = "Benito Martin"}
 ]
 license = {text = "MIT License"}
-requires-python = ">=3.12"
+requires-python = ">=3.12,<3.13"
 
 dependencies = [
     "alembic>=1.16.2",
+    "cached-path>=1.7.3",
     "detect-secrets>=1.5.0",
+    "detoxify>=0.5.2",
     "fastapi>=0.115.13",
+    "fastembed>=0.7.1",
     "fastembed-gpu>=0.7.1",
     "guardrails-ai>=0.5.15",
-    "guardrails-api-client>=0.4.0a1",
+    "guardrails-api-client>=0.3.13,<0.4.0",
     "langchain>=0.3.26",
     "langchain-openai>=0.3.24",
     "langgraph>=0.4.8",
     "loguru>=0.7.3",
     "psycopg2-binary>=2.9.10",
     "pydantic>=2.11.7",
-    "pydantic-settings>=2.9.1",
+    "pydantic-core>=2.33.2",
+    "pydantic-settings>=2.10.0",
     "python-dotenv>=1.1.0",
     "qdrant-client>=1.14.3",
     "requests>=2.32.4",
     "sqlalchemy>=2.0.41",
     "uvicorn>=0.34.3",
+     "boto3>=1.38.41",
 ]
 
 [dependency-groups]
 dev = [
- "boto3>=1.38.41",
  "langgraph-cli[inmem]>=0.3.3",
  "pre-commit>=4.2.0",
 ]

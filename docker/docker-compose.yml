@@ -1,15 +1,16 @@
+# docker-compose.yml
 services:
   postgres:
     image: postgres:latest
-    restart: always
+    restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
     ports:
-      - "${POSTGRES_PORT}:5432"  # Map host port to container's default 5432
+      - "${POSTGRES_PORT}:5432"
     volumes:
-      - db_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
       interval: 10s
@@ -25,19 +26,30 @@ services:
       postgres:
         condition: service_healthy
 
-  web:
-    image: github-issues
-    command: uvicorn src.api.main:app --host 0.0.0.0 --reload --port 8000 --log-level info
+  app:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      args:
+        GUARDRAILS_API_KEY: ${GUARDRAILS_API_KEY}
     ports:
       - "8000:8000"
-
     environment:
+      - GUARDRAILS_API_KEY=${GUARDRAILS_API_KEY}
       - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - GUARDRAILS_HUB_API_KEY=${GUARDRAILS_HUB_API_KEY}
-
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_PORT=${POSTGRES_PORT}
+      - ADMINER_PORT=${ADMINER_PORT}
+      - APP_ENV=${APP_ENV}
+    depends_on:
+      postgres:
+        condition: service_healthy
     volumes:
-      - ../src:/app/src  # Mount local source into container
+      - ../src:/app/src:ro
+    restart: unless-stopped
 
 volumes:
-  db_data:
+  postgres_data:
     name: db_data_${APP_ENV}
