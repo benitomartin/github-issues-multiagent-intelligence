@@ -167,7 +167,7 @@ async def process_issue(
         raise HTTPException(status_code=500, detail=f"Processing failed: {str(e)}") from e
 
 
-# Validation endpoint (lightweight check without full processing)
+# Validation endpoint
 @app.post("/validate", tags=["Processing"])
 async def validate_issue(request: IssueRequest, graph: Annotated[Any, Depends(get_compiled_graph)]) -> dict[str, Any]:
     """
@@ -175,8 +175,6 @@ async def validate_issue(request: IssueRequest, graph: Annotated[Any, Depends(ge
     Returns basic validation results without detailed recommendations.
     """
     try:
-        # You could implement a lighter validation here
-        # For now, using the same processing but could be optimized
         result = await graph.ainvoke(
             {
                 "title": request.title,

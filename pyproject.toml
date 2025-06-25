@@ -37,7 +37,27 @@ dependencies = [
     "boto3>=1.38.41",
     "detect-secrets>=1.5.0",
     "cached-path>=1.7.3",
+    "torch>=2.7.0",
+    "detoxify>=0.5.2",
+    "nltk>=3.8.1",
 ]
+
+
+[tool.uv.sources]
+torch = [
+  { index = "pytorch-cpu" },
+]
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+# [[tool.uv.index]]
+# name = "pytorch-cu126"
+# url = "https://download.pytorch.org/whl/cu126"
+# explicit = true
+
 
 [dependency-groups]
 dev = [

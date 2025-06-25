@@ -4,6 +4,7 @@ from collections.abc import Generator
 from contextlib import contextmanager
 
 import boto3
+from loguru import logger
 from sqlalchemy import create_engine
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session, sessionmaker
@@ -45,9 +46,13 @@ class DB:
                     dbname=settings.POSTGRES_DB,
                 )
 
+        logger.info(f"Connecting to DB with: {config}")
         db_url = config.build_url()
+        logger.info(f"Database URL: {db_url}")
         self.engine = create_engine(db_url, echo=True)
+        logger.info("DB engine created")
         self.SessionLocal = sessionmaker(bind=self.engine)
+        logger.info("DB sessionmaker created")
 
     def get_session(self) -> Session:
         """Create and return a new Session instance."""

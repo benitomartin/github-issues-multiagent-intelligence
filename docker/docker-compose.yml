@@ -1,18 +1,16 @@
 # docker-compose.yml
 services:
-  postgres:
+  db:
     image: postgres:latest
     restart: unless-stopped
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
+    env_file:
+      - ../.env.${APP_ENV}
     ports:
       - "${POSTGRES_PORT}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      test: ["CMD-SHELL", "pg_isready -d $POSTGRES_DB -U ${POSTGRES_USER}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -20,35 +18,36 @@ services:
   adminer:
     image: adminer
     restart: always
+    environment:
+      - APP_ENV=${APP_ENV}
+    env_file:
+      - ../.env.${APP_ENV}
     ports:
-      - "${ADMINER_PORT}:8080"
+    - "${ADMINER_PORT}:8080"
     depends_on:
-      postgres:
+      db:
         condition: service_healthy
 
   app:
     build:
       context: ..
-      dockerfile: docker/Dockerfile
-      args:
-        GUARDRAILS_API_KEY: ${GUARDRAILS_API_KEY}
+      dockerfile: docker/${APP_ENV}.Dockerfile
+      secrets:
+        - GUARDRAILS_API_KEY
     ports:
       - "8000:8000"
     environment:
-      - GUARDRAILS_API_KEY=${GUARDRAILS_API_KEY}
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - POSTGRES_USER=${POSTGRES_USER}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      - POSTGRES_DB=${POSTGRES_DB}
-      - POSTGRES_PORT=${POSTGRES_PORT}
-      - ADMINER_PORT=${ADMINER_PORT}
       - APP_ENV=${APP_ENV}
+    env_file:
+      - ../.env.${APP_ENV}
     depends_on:
-      postgres:
+      db:
         condition: service_healthy
-    volumes:
-      - ../src:/app/src:ro
     restart: unless-stopped
+
+secrets:
+  GUARDRAILS_API_KEY:
+    environment: GUARDRAILS_API_KEY
 
 volumes:
   postgres_data:

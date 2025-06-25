@@ -1,9 +1,6 @@
 # Multi-stage Docker build for Python application with Guardrails
 FROM ghcr.io/astral-sh/uv:bookworm-slim AS builder
 
-# Build arguments for secrets (passed at build time)
-ARG GUARDRAILS_API_KEY
-
 # UV configuration for optimized builds
 ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy
 ENV UV_PYTHON_INSTALL_DIR=/python
@@ -11,6 +8,12 @@ ENV UV_PYTHON_PREFERENCE=only-managed
 
 # Install Python before the project for better caching
 RUN uv python install 3.12
+
+# Install runtime dependencies, including Git
+RUN apt-get update && apt-get install -y \
+    ca-certificates \
+    git \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
@@ -20,52 +23,60 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
     uv sync --locked --no-install-project --no-dev
 
-# Copy the entire project
-COPY . /app
+# Copy only necessary files for the project installation
+COPY pyproject.toml uv.lock README.md ./
+COPY src/ ./src/
 
 # Install the project itself
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --locked --no-dev
 
+# Configure guardrails using build secret
+RUN --mount=type=secret,id=GUARDRAILS_API_KEY \
+    uv run guardrails configure --token "$(cat /run/secrets/GUARDRAILS_API_KEY)" \
+                                --disable-metrics \
+                                --enable-remote-inferencing
+
+# Cache both the download and install locations
+RUN --mount=type=cache,target=/root/.cache/guardrails \
+    --mount=type=cache,target=/root/.guardrails \
+    --mount=type=cache,target=/tmp/guardrails-install \
+    uv run guardrails hub install hub://guardrails/toxic_language && \
+    uv run guardrails hub install hub://guardrails/detect_jailbreak && \
+    uv run guardrails hub install hub://guardrails/secrets_present
+
 # Production stage - minimal runtime image
 FROM debian:bookworm-slim
 
-# Create app user for security
+# Create app user first
 RUN groupadd --gid 1000 app && \
     useradd --uid 1000 --gid app --shell /bin/bash --create-home app
 
-# Install runtime dependencies, including Git
-RUN apt-get update && apt-get install -y \
-    ca-certificates \
-    git \
-    && rm -rf /var/lib/apt/lists/*
-
 # Copy Python installation from builder
-COPY --from=builder --chown=app:app /python /python
-COPY --from=builder --chown=app:app /usr/local/bin/uv /usr/local/bin/uv
-
-# Copy application and virtual environment from builder
-COPY --from=builder --chown=app:app /app /app
-
-# Copy entrypoint script
-COPY docker/entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
-
-# Switch to app user
-USER app
+COPY --from=builder /python /python
 
 # Set working directory
 WORKDIR /app
 
-# Place executables in the environment at the front of the path
-ENV PATH="/app/.venv/bin:$PATH"
+# Copy application and virtual environment from builder
+COPY --from=builder --chown=app:app /app /app
 
+# Copy guardrails config to app user's home
+COPY --from=builder /root/.guardrailsrc /home/app/.guardrailsrc
+RUN chown app:app /home/app/.guardrailsrc
 
-# Expose port (adjust as needed)
+# Set PATH to include Python and virtual environment
+ENV PATH="/python/bin:/app/.venv/bin:$PATH"
+
+# Switch to non-root user
+USER app
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:8000/health || exit 1
+
+# Expose port
 EXPOSE 8000
 
-# Use entrypoint script to handle guardrails setup
-ENTRYPOINT ["/entrypoint.sh"]
-
-# Default command - adjust based on your FastAPI app structure
+# FastAPI command
 CMD ["uvicorn", "src.api.main:app", "--host", "0.0.0.0", "--port", "8000", "--log-level", "info"]
