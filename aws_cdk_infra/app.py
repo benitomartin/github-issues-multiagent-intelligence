@@ -1,17 +1,16 @@
-import os
-
 import aws_cdk as cdk
-
-from aws_cdk_infra.aws_cdk_infra_stack import GithubIssuesIntelligenceStack
+from lib.eks_stack import EKSStack
+from lib.rds_stack import RDSStack
+from lib.vpc_stack import VPCStack
 
 app = cdk.App()
-GithubIssuesIntelligenceStack(
-    app,
-    "GithubIssuesIntelligenceStack",
-    env=cdk.Environment(account=os.getenv("CDK_DEFAULT_ACCOUNT"), region=os.getenv("CDK_DEFAULT_REGION")),
-)
+
+vpc_stack = VPCStack(app, "VpcStack")
+rds_stack = RDSStack(app, "RdsStack", vpc=vpc_stack.vpc)
+eks_stack = EKSStack(app, "EksStack", vpc=vpc_stack.vpc)
 
 app.synth()
+
 
 # If you don't specify 'env', this stack will be environment-agnostic.
 # Account/Region-dependent features and context lookups will not work,

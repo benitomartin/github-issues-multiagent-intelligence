@@ -3,3 +3,4 @@ constructs>=10.0.0,<11.0.0
 aws-cdk.aws-rds
 aws-cdk.aws-ec2
 python-dotenv
+aws-cdk-lambda-layer-kubectl-v33

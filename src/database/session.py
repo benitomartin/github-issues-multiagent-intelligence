@@ -16,6 +16,7 @@ from src.utils.config import settings
 def get_db_credentials_from_aws(secret_name: str, region_name: str) -> dict:
     client = boto3.client("secretsmanager", region_name=region_name)
     response = client.get_secret_value(SecretId=secret_name)
+    print(f"Response from AWS: {response}")
     return json.loads(response["SecretString"])
 
 
