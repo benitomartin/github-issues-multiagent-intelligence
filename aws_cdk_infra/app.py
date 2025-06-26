@@ -1,7 +1,8 @@
 import aws_cdk as cdk
-from lib.eks_stack import EKSStack
-from lib.rds_stack import RDSStack
-from lib.vpc_stack import VPCStack
+
+from aws_cdk_infra.eks_stack import EKSStack
+from aws_cdk_infra.rds_stack import RDSStack
+from aws_cdk_infra.vpc_stack import VPCStack
 
 app = cdk.App()
 
