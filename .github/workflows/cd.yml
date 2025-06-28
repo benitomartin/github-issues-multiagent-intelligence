@@ -90,7 +90,10 @@ jobs:
 
           if [ -f ~/.aws/credentials ]; then
             echo "AWS Credentials file (structure only):"
-            grep -E '^\[.*\]
+            grep -E '^\[bmlschool\]' ~/.aws/credentials
+          else
+            echo "No ~/.aws/credentials file found"
+          fi
       - name: Set up kubectl
         run: |
           mkdir -p ~/.kube
