@@ -31,6 +31,8 @@ jobs:
             --build-arg APP_ENV=prod \
             app
           echo "Docker image built."
+        env:
+          APP_ENV: prod
 
       - name: Log in to Amazon ECR
         run: |
