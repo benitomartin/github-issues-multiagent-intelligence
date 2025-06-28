@@ -107,6 +107,11 @@ spec:
                 secretKeyRef:
                   name: app-secrets
                   key: SECRET_NAME
+            - name: AWS_ACCOUNT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: aws-account-secret
+                  key: AWS_ACCOUNT_ID
 
           # Startup probe - gives the app time to start
           startupProbe:
