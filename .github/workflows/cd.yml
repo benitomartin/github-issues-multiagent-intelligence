@@ -17,34 +17,34 @@ jobs:
         with:
           python-version: 3.12
 
-      - name: Set up AWS CLI
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
+      # - name: Set up AWS CLI
+      #   uses: aws-actions/configure-aws-credentials@v1
+      #   with:
+      #     aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      #     aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      #     aws-region: ${{ secrets.AWS_REGION }}
 
-      - name: Build Docker image
-        run: |
-          echo "Building Docker image for 'app' service..."
-          COMPOSE_BAKE=true docker compose -f docker/docker-compose.yml build \
-            --build-arg APP_ENV=prod \
-            app
-          echo "Docker image built."
-        env:
-          APP_ENV: prod
+      # - name: Build Docker image
+      #   run: |
+      #     echo "Building Docker image for 'app' service..."
+      #     COMPOSE_BAKE=true docker compose -f docker/docker-compose.yml build \
+      #       --build-arg APP_ENV=prod \
+      #       app
+      #     echo "Docker image built."
+      #   env:
+      #     APP_ENV: prod
 
-      - name: Log in to Amazon ECR
-        run: |
-          aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
+      # - name: Log in to Amazon ECR
+      #   run: |
+      #     aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
 
-      - name: Tag Docker image
-        run: |
-          docker tag myapp-prod-image:latest ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/fastapi-app:latest
+      # - name: Tag Docker image
+      #   run: |
+      #     docker tag myapp-prod-image:latest ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/fastapi-app:latest
 
-      - name: Push Docker image to ECR
-        run: |
-          docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/fastapi-app:latest
+      # - name: Push Docker image to ECR
+      #   run: |
+      #     docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/fastapi-app:latest
 
 
       - uses: actions-hub/kubectl@master
@@ -52,3 +52,24 @@ jobs:
           KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
         with:
           args: get pods
+
+      - name: Get LoadBalancer URL
+        run: |
+          LB_URL=$(kubectl get svc fastapi-external -n my-app -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+          echo "The LoadBalancer URL is: $LB_URL"
+          echo "LB_URL=$LB_URL" >> $GITHUB_ENV  # Set as an environment variable for the next steps
+
+      - name: Test FastAPI endpoint
+        run: |
+          echo "Testing FastAPI endpoint..."
+          # Wait for the load balancer to route traffic
+          timeout 60s bash -c 'until curl -s http://$LB_URL/health; do sleep 2; done'
+          echo "LB URL: $LB_URL"
+
+          # Test the POST endpoint
+          curl -X POST "http://$LB_URL/process-issue" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "title": "Test Issue",
+              "body": "huberregressor"
+            }'
