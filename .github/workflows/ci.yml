@@ -49,15 +49,15 @@ jobs:
 
       - name: Wait for PostgreSQL to be ready
         run: |
-          timeout 60s bash -c 'until pg_isready -h localhost -U myuser; do sleep 2; done'
+          timeout 60s bash -c 'until pg_isready -h localhost -U ${{ secrets.POSTGRES_USER }}; do sleep 2; done'
 
       - name: Run Alembic migrations
         run: |
           uv run alembic upgrade head
         env:
-          POSTGRES_USER: myuser
-          POSTGRES_PASSWORD: mypassword
-          POSTGRES_DB: github_issues
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
           POSTGRES_HOST: localhost
           POSTGRES_PORT: 5432
 
