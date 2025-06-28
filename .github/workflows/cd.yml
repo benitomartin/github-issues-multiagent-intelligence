@@ -71,7 +71,7 @@ jobs:
           IMAGE_NAME=myapp-${{ secrets.APP_ENV }}-image
           ECR_URI=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${IMAGE_NAME}
 
-          docker compose --env-file .env.${{ secrets.APP_ENV }} -f docker-compose.yml build app
+          docker compose --env-file .env.${{ secrets.APP_ENV }} -f docker/docker-compose.yml build app
           docker tag ${IMAGE_NAME}:latest $ECR_URI:latest
           docker push $ECR_URI:latest
 
