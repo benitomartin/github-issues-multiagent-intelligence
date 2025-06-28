@@ -29,116 +29,22 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-      # Step 4: Install AWS CLI (if not already available)
-      - name: Install AWS CLI
-        run: |
-          curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-          unzip awscliv2.zip
-          sudo ./aws/install --update
-
-      # Step 5: Debug AWS configuration
-      - name: Debug AWS configuration
-        run: |
-          echo "=== AWS Configuration Debug ==="
-          echo "Checking if ~/.aws directory exists:"
-          ls -la ~/
-
-          if [ -d ~/.aws ]; then
-            echo "~/.aws directory exists"
-            echo "Contents of ~/.aws:"
-            ls -la ~/.aws/
-
-            if [ -f ~/.aws/config ]; then
-              echo "=== AWS Config file ==="
-              cat ~/.aws/config
-            else
-              echo "No ~/.aws/config file found"
-            fi
-
-            if [ -f ~/.aws/credentials ]; then
-              echo "=== AWS Credentials file (masked) ==="
-              # Show structure but mask sensitive values
-              sed 's/aws_access_key_id = .*/aws_access_key_id = ***MASKED***/g; s/aws_secret_access_key = .*/aws_secret_access_key = ***MASKED***/g' ~/.aws/credentials
-            else
-              echo "No ~/.aws/credentials file found"
-            fi
-          else
-            echo "~/.aws directory does not exist"
-          fi
-
-          echo "=== Environment Variables ==="
-          echo "AWS_PROFILE: ${AWS_PROFILE:-not set}"
-          echo "AWS_REGION: ${AWS_REGION:-not set}"
-          echo "AWS_DEFAULT_REGION: ${AWS_DEFAULT_REGION:-not set}"
-
-      # Step 6: Configure AWS profile for kubectl
-      - name: Configure AWS profile
+      # Step 4: Set AWS_PROFILE environment variable for kubectl
+      - name: Set AWS_PROFILE for kubectl
         run: |
           aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }} --profile bmlschool
           aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }} --profile bmlschool
           aws configure set region ${{ secrets.AWS_REGION }} --profile bmlschool
           echo "AWS_PROFILE=bmlschool" >> $GITHUB_ENV
 
-      # Step 7: Verify AWS profile configuration
+      # Step 5: Verify AWS profile configuration (Optional Debug)
       - name: Verify AWS profile configuration
         run: |
-          echo "=== After Profile Configuration ==="
-          if [ -f ~/.aws/config ]; then
-            echo "AWS Config file:"
-            cat ~/.aws/config
-          fi
-
-          if [ -f ~/.aws/credentials ]; then
-            echo "AWS Credentials file (structure only):"
-            grep -E '^\[bmlschool\]' ~/.aws/credentials
-          else
-            echo "No ~/.aws/credentials file found"
-          fi
-      - name: Set up kubectl
-        run: |
-          mkdir -p ~/.kube
-          echo "${{ secrets.KUBE_CONFIG }}" | base64 -d > ~/.kube/config
-          chmod 600 ~/.kube/config
-
-      # Step 9: Test kubectl access
-      - name: Test kubectl access
-        run: |
-          kubectl cluster-info
-          kubectl get nodes
-
-      # Step 10: Get pods
-      - name: Get pods
-        run: |
-          kubectl get pods -A
-
-      # Step 11: Get LoadBalancer URL
-      - name: Get LoadBalancer URL
-        run: |
-          LB_URL=$(kubectl get svc fastapi-external -n my-app -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
-          echo "The LoadBalancer URL is: $LB_URL"
-          echo "LB_URL=$LB_URL" >> $GITHUB_ENV  # Set as an environment variable for subsequent steps
-
-      # Step 12: Test FastAPI endpoint
-      - name: Test FastAPI endpoint
-        run: |
-          echo "Testing FastAPI endpoint..."
-          # Wait for the load balancer to route traffic
-          timeout 60s bash -c 'until curl -s http://$LB_URL/health; do sleep 2; done'
-          echo "LB URL: $LB_URL"
-
-          # Test the POST endpoint
-          curl -X POST "http://$LB_URL/process-issue" \
-            -H "Content-Type: application/json" \
-            -d '{
-              "title": "Test Issue",
-              "body": "huberregressor"
-            }' ~/.aws/credentials || echo "No profiles found"
-          fi
-
-          echo "Testing AWS CLI with profile:"
+          echo "=== AWS Profile Configuration ==="
           aws sts get-caller-identity --profile bmlschool
+          aws s3 ls --profile bmlschool
 
-      # Step 8: Set up kubectl with your pre-configured KUBECONFIG
+      # Step 6: Set up kubectl with your pre-configured KUBECONFIG
       - name: Set up kubectl
         run: |
           mkdir -p ~/.kube
