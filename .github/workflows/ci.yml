@@ -19,9 +19,9 @@ jobs:
           --health-timeout=3s
           --health-retries=5
         env:
-          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
-          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
-          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+          POSTGRES_USER: myuser
+          POSTGRES_PASSWORD: mypassword
+          POSTGRES_DB: github_issues
 
     steps:
       - name: Checkout code
@@ -40,24 +40,24 @@ jobs:
 
       - name: Create .env file for services
         run: |
-          echo "POSTGRES_USER=${{ secrets.POSTGRES_USER }}" > .env
-          echo "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> .env
-          echo "POSTGRES_DB=${{ secrets.POSTGRES_DB }}" >> .env
+          echo "POSTGRES_USER: myuser" > .env
+          echo "POSTGRES_PASSWORD: mypassword }}" >> .env
+          echo "POSTGRES_DB: github_issues }}" >> .env
           echo "POSTGRES_HOST=localhost" >> .env
           echo "POSTGRES_PORT=5432" >> .env
           echo "APP_ENV=dev" >> .env
 
       - name: Wait for PostgreSQL to be ready
         run: |
-          timeout 60s bash -c 'until pg_isready -h localhost -U ${{ secrets.POSTGRES_USER }}; do sleep 2; done'
+          timeout 60s bash -c 'until pg_isready -h localhost -U myuser; do sleep 2; done'
 
       - name: Run Alembic migrations
         run: |
           uv run alembic upgrade head
         env:
-          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
-          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
-          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+          POSTGRES_USER: myuser
+          POSTGRES_PASSWORD: mypassword
+          POSTGRES_DB: github_issues
           POSTGRES_HOST: localhost
           POSTGRES_PORT: 5432
 
