@@ -51,6 +51,13 @@ jobs:
         run: |
           timeout 60s bash -c 'until pg_isready -h localhost -U ${{ secrets.POSTGRES_USER }}; do sleep 2; done'
 
+
+      - name: Print environment variables for debugging
+        run: |
+          echo "POSTGRES_USER=${{ secrets.POSTGRES_USER }}"
+          echo "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}"
+          echo "POSTGRES_DB=${{ secrets.POSTGRES_DB }}"
+
       - name: Run Alembic migrations
         run: |
           uv run alembic upgrade head
