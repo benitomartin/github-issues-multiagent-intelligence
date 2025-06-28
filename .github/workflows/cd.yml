@@ -32,17 +32,17 @@ jobs:
       # Step 4: Set AWS_PROFILE environment variable for kubectl
       - name: Set AWS_PROFILE for kubectl
         run: |
-          aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }} --profile bmlschool
-          aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }} --profile bmlschool
-          aws configure set region ${{ secrets.AWS_REGION }} --profile bmlschool
-          echo "AWS_PROFILE=bmlschool" >> $GITHUB_ENV
+          aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }} --profile ${{ secrets.AWS_PROFILE }}
+          aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }} --profile ${{ secrets.AWS_PROFILE }}
+          aws configure set region ${{ secrets.AWS_REGION }} --profile ${{ secrets.AWS_PROFILE }}
+          echo "AWS_PROFILE=${{ secrets.AWS_PROFILE }}" >> $GITHUB_ENV
 
       # Step 5: Verify AWS profile configuration (Optional Debug)
       - name: Verify AWS profile configuration
         run: |
           echo "=== AWS Profile Configuration ==="
-          aws sts get-caller-identity --profile bmlschool
-          aws s3 ls --profile bmlschool
+          aws sts get-caller-identity --profile ${{ secrets.AWS_PROFILE }}
+          aws s3 ls --profile ${{ secrets.AWS_PROFILE }}
 
       # Step 6: Set up kubectl with your pre-configured KUBECONFIG
       - name: Set up kubectl
