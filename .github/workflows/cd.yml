@@ -75,20 +75,12 @@ jobs:
           docker tag ${IMAGE_NAME}:latest $ECR_URI:latest
           docker push $ECR_URI:latest
 
-      # # Step 9: Set up kubectl with KUBECONFIG from secret
-      # - name: Set up kubectl
-      #   run: |
-      #     mkdir -p ~/.kube
-      #     echo "${{ secrets.KUBE_CONFIG }}" | base64 -d > ~/.kube/config
-      #     chmod 600 ~/.kube/config
-
       # Step 9: Set up kubectl with KUBECONFIG from secret
       - name: Set up kubectl
-        uses: actions-hub/kubectl@master
-        env:
-          KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
-        with:
-          args: get pods
+        run: |
+          mkdir -p ~/.kube
+          echo "${{ secrets.KUBE_CONFIG }}" | base64 -d > ~/.kube/config
+
 
       # Step 10: Update Kubernetes Deployment with new image
       - name: Update Kubernetes Deployment with new image
