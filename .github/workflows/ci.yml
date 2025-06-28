@@ -92,8 +92,8 @@ jobs:
         run: |
           uv run ruff check . --fix --exit-non-zero-on-fix
 
-      # - name: Type check with mypy
-      #   run: uv run mypy
+      - name: Type check with mypy
+        run: uv run mypy
 
       - name: Run tests
         env:

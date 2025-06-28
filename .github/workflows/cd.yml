@@ -69,18 +69,24 @@ jobs:
       - name: Build and push Docker image to ECR
         run: |
           IMAGE_NAME=myapp-${{ secrets.APP_ENV }}-image
-          ECR_URI=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${IMAGE_NAME}
+          ECR_URI=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/fastapi-app
 
           docker compose --env-file .env.${{ secrets.APP_ENV }} -f docker/docker-compose.yml build app
           docker tag ${IMAGE_NAME}:latest $ECR_URI:latest
           docker push $ECR_URI:latest
 
+      # # Step 9: Set up kubectl with KUBECONFIG from secret
+      # - name: Set up kubectl
+      #   run: |
+      #     mkdir -p ~/.kube
+      #     echo "${{ secrets.KUBE_CONFIG }}" | base64 -d > ~/.kube/config
+      #     chmod 600 ~/.kube/config
+
       # Step 9: Set up kubectl with KUBECONFIG from secret
       - name: Set up kubectl
-        run: |
-          mkdir -p ~/.kube
-          echo "${{ secrets.KUBE_CONFIG }}" | base64 -d > ~/.kube/config
-          chmod 600 ~/.kube/config
+        uses: actions-hub/kubectl@master
+        env:
+          KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
 
       # Step 10: Update Kubernetes Deployment with new image
       - name: Update Kubernetes Deployment with new image
