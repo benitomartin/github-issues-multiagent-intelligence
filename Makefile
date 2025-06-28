@@ -80,10 +80,6 @@ ingest-embeddings: ## Ingest embeddings into Qdrant
 	APP_ENV=$(APP_ENV) uv run src/vectorstore/ingest_embeddings.py
 	@echo "Embeddings ingested successfully."
 
-vector-test: ## Test vector search
-	APP_ENV=$(APP_ENV) uv run src/vectorstore/vectorstore_test.py
-
-
 #################################################################################
 ## Graph Commands
 #################################################################################

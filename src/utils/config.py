@@ -2,6 +2,7 @@ import os
 from typing import ClassVar
 
 from loguru import logger
+from pydantic import SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -33,7 +34,7 @@ class Settings(BaseSettings):
     BATCH_SIZE: int = 20
     CONCURRENT_COMMENTS: int = 5
     LANGSMITH_API_KEY: str = ""
-    OPENAI_API_KEY: str = ""
+    OPENAI_API_KEY: SecretStr = SecretStr("")
     LLM_MODEL_NAME: str = "gpt-4o-mini"
     TEMPERATURE: float = 0
     REPOS_CONFIG: str = "src/config/repos.yaml"

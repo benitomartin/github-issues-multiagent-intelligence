@@ -1,3 +1,5 @@
+import os
+
 import aws_cdk.lambda_layer_kubectl_v33
 from aws_cdk import Stack
 from aws_cdk import aws_ec2 as ec2
@@ -13,18 +15,20 @@ class EKSStack(Stack):
     def __init__(self, scope: Construct, id: str, vpc: ec2.Vpc, **kwargs: object) -> None:
         super().__init__(scope, id, **kwargs)
 
-        # Define the EKS Cluster
+        # Define the EKS Cluster (Fargate)
         eks_cluster = eks.Cluster(
             self,
             "EKSCluster",
-            version=eks.KubernetesVersion.V1_30,
+            version=eks.KubernetesVersion.V1_32,
             vpc=vpc,
-            default_capacity=2,
+            default_capacity=0,  # No default EC2 worker nodes
             kubectl_layer=aws_cdk.lambda_layer_kubectl_v33.KubectlV33Layer(self, "KubectlLayer"),
         )
 
-        # Define the IAM user 'bmschool'
-        admin_user = iam.User.from_user_arn(self, "AdminUser", "arn:aws:iam::os:user/bmlschool")
+        # Define the IAM user
+        admin_user = iam.User.from_user_arn(
+            self, "AdminUser", f"arn:aws:iam::{os.getenv('AWS_ACCOUNT_ID')}:user/{os.getenv('IAM_USER')}"
+        )
 
         # Add the IAM user to the 'system:masters' Kubernetes group for admin access
         eks_cluster.aws_auth.add_user_mapping(
@@ -32,26 +36,35 @@ class EKSStack(Stack):
             groups=["system:masters"],
         )
 
-        # Define the IAM Role for the node group
-        nodegroup_role = iam.Role(
+        # Create the Pod Execution Role for Fargate Profile
+        pod_execution_role = iam.Role(
             self,
-            "NodeGroupRole",
-            assumed_by=iam.ServicePrincipal("ec2.amazonaws.com"),
+            "PodExecutionRole",
+            assumed_by=iam.ServicePrincipal("eks-fargate-pods.amazonaws.com"),
             managed_policies=[
-                iam.ManagedPolicy.from_aws_managed_policy_name("AmazonEKSWorkerNodePolicy"),
+                # Required for Fargate pod execution
+                iam.ManagedPolicy.from_aws_managed_policy_name("AmazonEKSFargatePodExecutionRolePolicy"),
+                # # Allow full EC2 access
+                iam.ManagedPolicy.from_aws_managed_policy_name("AmazonEC2FullAccess"),
+                # Allow CloudWatch logging (if you're logging)
+                iam.ManagedPolicy.from_aws_managed_policy_name("CloudWatchLogsFullAccess"),
+                # Access to ECR (if pulling container images from ECR)
                 iam.ManagedPolicy.from_aws_managed_policy_name("AmazonEC2ContainerRegistryReadOnly"),
-                iam.ManagedPolicy.from_aws_managed_policy_name("AmazonEKS_CNI_Policy"),
+                # Permissions for EKS networking
                 iam.ManagedPolicy.from_aws_managed_policy_name("SecretsManagerReadWrite"),
             ],
         )
 
-        # Add a managed node group
-        eks_cluster.add_nodegroup_capacity(
-            "ExtraNodeGroup",
-            desired_size=2,
-            min_size=1,
-            max_size=3,
-            instance_types=[ec2.InstanceType("t3.medium")],
-            disk_size=20,
-            node_role=nodegroup_role,
+        # Define Fargate Profile for system pods (CoreDNS, etc.)
+        eks_cluster.add_fargate_profile(
+            "SystemFargateProfile",
+            selectors=[{"namespace": "kube-system"}],
+            pod_execution_role=pod_execution_role,
+        )
+
+        # Define Fargate Profile for FastAPI app
+        eks_cluster.add_fargate_profile(
+            "AppFargateProfile",
+            selectors=[{"namespace": "my-app", "labels": {"app": "fastapi"}}],
+            pod_execution_role=pod_execution_role,
         )

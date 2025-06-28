@@ -3,6 +3,7 @@ services:
   db:
     image: postgres:latest
     restart: unless-stopped
+    container_name: ${APP_ENV}-db-container
     env_file:
       - ../.env.${APP_ENV}
     ports:
@@ -18,6 +19,7 @@ services:
   adminer:
     image: adminer
     restart: always
+    container_name: ${APP_ENV}-adminer-container
     environment:
       - APP_ENV=${APP_ENV}
     env_file:
@@ -34,6 +36,8 @@ services:
       dockerfile: docker/${APP_ENV}.Dockerfile
       secrets:
         - GUARDRAILS_API_KEY
+    image: myapp-${APP_ENV}-image
+    container_name: ${APP_ENV}-app-container
     ports:
       - "8000:8000"
     environment:

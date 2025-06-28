@@ -31,6 +31,13 @@ COPY src/ ./src/
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --locked --no-dev
 
+# Set the directory for nltk data
+ENV NLTK_DATA=/opt/nltk_data
+
+# Download NLTK data (punkt tokenizer and other common data)
+RUN --mount=type=cache,target=/root/.cache/nltk \
+    uv run python -m nltk.downloader -d /opt/nltk_data punkt stopwords wordnet averaged_perceptron_tagger
+
 # Configure guardrails using build secret
 RUN --mount=type=secret,id=GUARDRAILS_API_KEY \
     uv run guardrails configure --token "$(cat /run/secrets/GUARDRAILS_API_KEY)" \
@@ -48,10 +55,6 @@ RUN --mount=type=cache,target=/root/.cache/guardrails \
 # Production stage - minimal runtime image
 FROM debian:bookworm-slim
 
-# Create app user first
-RUN groupadd --gid 1000 app && \
-    useradd --uid 1000 --gid app --shell /bin/bash --create-home app
-
 # Copy Python installation from builder
 COPY --from=builder /python /python
 
@@ -59,21 +62,17 @@ COPY --from=builder /python /python
 WORKDIR /app
 
 # Copy application and virtual environment from builder
-COPY --from=builder --chown=app:app /app /app
+COPY --from=builder /app /app
 
-# Copy guardrails config to app user's home
-COPY --from=builder /root/.guardrailsrc /home/app/.guardrailsrc
-RUN chown app:app /home/app/.guardrailsrc
+# Copy NLTK data from builder
+COPY --from=builder /opt/nltk_data /opt/nltk_data
+
+# Copy guardrails config
+COPY --from=builder /root/.guardrailsrc /root/.guardrailsrc
 
 # Set PATH to include Python and virtual environment
 ENV PATH="/python/bin:/app/.venv/bin:$PATH"
-
-# Switch to non-root user
-USER app
-
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:8000/health || exit 1
+ENV NLTK_DATA=/opt/nltk_data
 
 # Expose port
 EXPOSE 8000

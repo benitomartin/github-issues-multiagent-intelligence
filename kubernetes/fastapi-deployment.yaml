@@ -1,0 +1,156 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fastapi-deployment
+  namespace: my-app
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: fastapi
+  template:
+    metadata:
+      labels:
+        app: fastapi
+    spec:
+      containers:
+        - name: fastapi
+          image: 730335307143.dkr.ecr.eu-central-1.amazonaws.com/fastapi-app:latest
+          ports:
+            - containerPort: 8000
+          env:
+            # Non-sensitive env variables from ConfigMap
+            - name: APP_ENV
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: APP_ENV
+            - name: AWS_REGION
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: AWS_REGION
+            - name: POSTGRES_DB
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: POSTGRES_DB
+            - name: POSTGRES_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: POSTGRES_HOST
+            - name: POSTGRES_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: POSTGRES_PORT
+            - name: ADMINER_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: ADMINER_PORT
+            - name: ISSUES_TABLE_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: ISSUES_TABLE_NAME
+            - name: COMMENTS_TABLE_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: COMMENTS_TABLE_NAME
+
+            # Sensitive env variables from Secret
+            - name: GH_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: GH_TOKEN
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: POSTGRES_USER
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: POSTGRES_PASSWORD
+            - name: QDRANT_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: QDRANT_API_KEY
+            - name: QDRANT_URL
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: QDRANT_URL
+            - name: LANGSMITH_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: LANGSMITH_API_KEY
+            - name: OPENAI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: OPENAI_API_KEY
+            - name: GUARDRAILS_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: GUARDRAILS_API_KEY
+            - name: SECRET_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: SECRET_NAME
+
+          # Startup probe - gives the app time to start
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 30  # 30 * 5s = 2.5 minutes to start
+            successThreshold: 1
+
+          # Liveness probe - restarts container if unhealthy
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+            successThreshold: 1
+
+          # Readiness probe - removes from service if not ready
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 3
+            successThreshold: 1
+
+          resources:
+            requests:
+              memory: "4Gi"      # Requesting more memory (4Gi per container)
+              cpu: "1000m"       # Requesting more CPU (1 vCPU per container)
+            limits:
+              memory: "6Gi"      # Limit memory usage (e.g. 6Gi per container)
+              cpu: "2000m"       # Limit CPU usage (2 vCPUs per container)
+
+          # # Security context (optional but recommended)
+          # securityContext:
+          #   allowPrivilegeEscalation: false
+          #   readOnlyRootFilesystem: false
+          #   runAsNonRoot: false  # Since we don't create a user in the Dockerfile, we need to disable this

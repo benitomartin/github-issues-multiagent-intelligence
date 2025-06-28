@@ -15,8 +15,6 @@
     - [AWS CDK](#aws-cdk)
     - [Testing](#testing)
   - [License](#license)
-- [API](#api)
-- [Kubernetes](#kubernetes)
 
 ## Overview
 
@@ -329,58 +327,3 @@ Individual Commands:
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-guardrails hub install hub://guardrails/toxic_language
-guardrails hub install hub://guardrails/detect_jailbreak
-guardrails hub install hub://guardrails/secrets_present
-
-# API
-
-Swagger
-{
-"title": "Test Issue",
-"body": "def hello():\\n user_id = "1234"\\n user_pwd = "password1234"\\n user_api_key = "sk-xhdfgtest""
-}
-
-CURL
-curl -X POST "http://localhost:8000/process-issue" \
--H "Content-Type: application/json" \
--d '{
-"title": "Test Issue",
-"body": "def hello():\\n user_id = "1234"\\n user_pwd = "password1234"\\n user_api_key = "sk-xhdfgtest""
-}'
-
-# Kubernetes
-
-1. Update kubeconfig with Correct Permissions:
-   You’ve already updated the kubeconfig using:
-
-aws eks --region eu-central-1 update-kubeconfig --name EKSClusterE11008B6-fa842af0987b4174a373aa8b7900fb95
-Just make sure your kubeconfig is using the correct context for the cluster, and check that the user in the kubeconfig is the one with sufficient permissions (bmlschool in this case).
-
-You can check the context:
-
-kubectl config get-contexts
-Make sure the context matches the one for your EKS cluster.
-
-2. Test Connection to Cluster:
-   Try running a basic kubectl command:
-
-kubectl cluster-info
-This should return details about the Kubernetes master. If there's still an issue, verify that the IAM permissions are correctly set.
-
-3. Verify Role and User Permissions:
-   Double-check that the user bmlschool has the appropriate permissions to interact with the cluster, especially considering your EKS cluster uses CONFIG_MAP authentication mode.
-
-You might need to ensure that bmlschool is mapped to the Kubernetes admin role in the aws-auth config map.
-
-Check if the aws-auth config map exists:
-
-kubectl get configmap aws-auth -n kube-system -o yaml
-If it’s not configured for bmlschool, you can add it manually by editing the config map:
-
-kubectl edit configmap aws-auth -n kube-system
-
-kubectl get nodes
-
-kubectl get pods --namespace=kube-system

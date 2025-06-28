@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Pod
 metadata:
-  name: rds-test2
+  name: pod-test
   namespace: my-app
   labels:
     app: fastapi
