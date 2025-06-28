@@ -28,13 +28,11 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
-          aws-profile: bmlschool
+          aws-profile: bmlschool  # Use the AWS profile bmlschool
 
-      # Step 4: Test AWS CLI access
-      - name: Test AWS CLI access
-        run: |
-          aws sts get-caller-identity
-          aws s3 ls  # Example: List S3 buckets
+      # Step 4: Set AWS_PROFILE environment variable explicitly for kubectl
+      - name: Set AWS_PROFILE for kubectl
+        run: echo "AWS_PROFILE=bmlschool" >> $GITHUB_ENV
 
       # Step 5: Set up kubectl with your pre-configured KUBECONFIG
       - name: Set up kubectl
@@ -43,25 +41,25 @@ jobs:
           echo "${{ secrets.KUBE_CONFIG }}" | base64 -d > ~/.kube/config
           chmod 600 ~/.kube/config
 
-      # Step 7: Test kubectl access
+      # Step 6: Test kubectl access
       - name: Test kubectl access
         run: |
           kubectl cluster-info
           kubectl get nodes
 
-      # Step 8: Get pods
+      # Step 7: Get pods
       - name: Get pods
         run: |
           kubectl get pods -A
 
-      # Step 9: Get LoadBalancer URL
+      # Step 8: Get LoadBalancer URL
       - name: Get LoadBalancer URL
         run: |
           LB_URL=$(kubectl get svc fastapi-external -n my-app -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
           echo "The LoadBalancer URL is: $LB_URL"
           echo "LB_URL=$LB_URL" >> $GITHUB_ENV  # Set as an environment variable for subsequent steps
 
-      # Step 10: Test FastAPI endpoint
+      # Step 9: Test FastAPI endpoint
       - name: Test FastAPI endpoint
         run: |
           echo "Testing FastAPI endpoint..."
