@@ -1,21 +1,58 @@
 name: CD Pipeline
+
 on:
   push:
     branches:
       - main
 
 jobs:
-  build-and-deploy:
+  deploy:
+    name: Deploy
     runs-on: ubuntu-latest
 
     steps:
+      # Step 1: Checkout the code
       - name: Checkout code
         uses: actions/checkout@v4
 
+      # Step 2: Set up Python
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: 3.12
+
+      # Step 3: Authenticate with Kubernetes (using KUBE_CONFIG if provided)
+      - name: Set up KubeConfig (KUBE_CONFIG secret)
+        uses: actions-hub/kubectl@master
+        env:
+          KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}  # KUBE_CONFIG base64 encoded secret
+        with:
+          args: get pods  # Test connection to Kubernetes and retrieve pods
+
+      # Step 5: Get LoadBalancer URL
+      - name: Get LoadBalancer URL
+        run: |
+          LB_URL=$(kubectl get svc fastapi-external -n my-app -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+          echo "The LoadBalancer URL is: $LB_URL"
+          echo "LB_URL=$LB_URL" >> $GITHUB_ENV  # Set as an environment variable for subsequent steps
+
+      # Step 6: Test FastAPI endpoint
+      - name: Test FastAPI endpoint
+        run: |
+          echo "Testing FastAPI endpoint..."
+          # Wait for the load balancer to route traffic
+          timeout 60s bash -c 'until curl -s http://$LB_URL/health; do sleep 2; done'
+          echo "LB URL: $LB_URL"
+
+          # Test the POST endpoint
+          curl -X POST "http://$LB_URL/process-issue" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "title": "Test Issue",
+              "body": "huberregressor"
+            }'
+            }'
+
 
       # - name: Set up AWS CLI
       #   uses: aws-actions/configure-aws-credentials@v1
@@ -45,31 +82,3 @@ jobs:
       # - name: Push Docker image to ECR
       #   run: |
       #     docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/fastapi-app:latest
-
-
-      - uses: actions-hub/kubectl@master
-        env:
-          KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
-        with:
-          args: get pods
-
-      - name: Get LoadBalancer URL
-        run: |
-          LB_URL=$(kubectl get svc fastapi-external -n my-app -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
-          echo "The LoadBalancer URL is: $LB_URL"
-          echo "LB_URL=$LB_URL" >> $GITHUB_ENV  # Set as an environment variable for the next steps
-
-      - name: Test FastAPI endpoint
-        run: |
-          echo "Testing FastAPI endpoint..."
-          # Wait for the load balancer to route traffic
-          timeout 60s bash -c 'until curl -s http://$LB_URL/health; do sleep 2; done'
-          echo "LB URL: $LB_URL"
-
-          # Test the POST endpoint
-          curl -X POST "http://$LB_URL/process-issue" \
-            -H "Content-Type: application/json" \
-            -d '{
-              "title": "Test Issue",
-              "body": "huberregressor"
-            }'
