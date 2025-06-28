@@ -14,7 +14,7 @@ jobs:
         ports:
           - 5432:5432
         options: >-
-          --health-cmd="pg_isready"
+          --health-cmd="pg_isready -U postgres"
           --health-interval=5s
           --health-timeout=3s
           --health-retries=5
@@ -44,14 +44,12 @@ jobs:
           echo "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> .env
           echo "POSTGRES_DB=${{ secrets.POSTGRES_DB }}" >> .env
           echo "POSTGRES_HOST=localhost" >> .env
-          echo "POSTGRES_PORT=5433" >> .env
+          echo "POSTGRES_PORT=5432" >> .env
           echo "APP_ENV=dev" >> .env
 
       - name: Wait for PostgreSQL to be ready
         run: |
-          timeout 60s bash -c 'until pg_isready -h localhost -p 5433; do sleep 2; done'
-          # Additional wait to ensure the custom user/database is fully initialized
-          sleep 5
+          timeout 60s bash -c 'until pg_isready -h localhost -U ${{ secrets.POSTGRES_USER }}; do sleep 2; done'
 
       - name: Run Alembic migrations
         run: |
@@ -61,7 +59,7 @@ jobs:
           POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
           POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
           POSTGRES_HOST: localhost
-          POSTGRES_PORT: 5433
+          POSTGRES_PORT: 5432
 
       - name: Ingest GitHub Issues
         run: |
@@ -72,7 +70,7 @@ jobs:
           POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
           POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
           POSTGRES_HOST: localhost
-          POSTGRES_PORT: 5433
+          POSTGRES_PORT: 5432
           ISSUES_TABLE_NAME: ${{ secrets.ISSUES_TABLE_NAME }}
           COMMENTS_TABLE_NAME: ${{ secrets.COMMENTS_TABLE_NAME }}
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
@@ -105,8 +103,8 @@ jobs:
           POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
           POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
           POSTGRES_HOST: localhost
-          POSTGRES_PORT: 5433
-          ADMINER_PORT: 8081
+          POSTGRES_PORT: 5432
+          ADMINER_PORT: ${{ secrets.ADMINER_PORT }}
           ISSUES_TABLE_NAME: ${{ secrets.ISSUES_TABLE_NAME }}
           COMMENTS_TABLE_NAME: ${{ secrets.COMMENTS_TABLE_NAME }}
           DENSE_MODEL_NAME: ${{ secrets.DENSE_MODEL_NAME }}
