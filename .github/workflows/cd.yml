@@ -21,39 +21,46 @@ jobs:
         with:
           python-version: 3.12
 
-      # Step 3: Install AWS CLI
-      - name: Install AWS CLI
-        run: |
-          curl "https://awscli.amazonaws.com/aws-cli-v2/latest/unix/x86_64/awscli.zip" -o "awscliv2.zip"
-          unzip awscliv2.zip
-          sudo ./install
-
-      # Step 4: Authenticate with AWS CLI for EKS access
-      - name: Configure AWS CLI
-        run: |
-          aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws configure set region ${{ secrets.AWS_REGION }}
-
-      # Step 5: Authenticate to Kubernetes using kubectl with EKS credentials
-      - name: Set up KubeConfig for EKS
-        run: |
-          aws eks update-kubeconfig --name ${{ secrets.EKS_CLUSTER_NAME }} --region ${{ secrets.AWS_REGION }}
-
-      # Step 6: Interact with Kubernetes
-      - name: Get pods
-        uses: actions-hub/kubectl@master
+      # Step 3: Configure AWS credentials using secrets
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
         with:
-          args: get pods
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
 
-      # Step 7: Get LoadBalancer URL
+      # Step 4: Test AWS CLI access
+      - name: Test AWS CLI access
+        run: |
+          aws sts get-caller-identity
+          aws s3 ls  # Example: List S3 buckets
+
+      # Step 5: Set up kubectl with your pre-configured KUBECONFIG
+      - name: Set up kubectl
+        run: |
+          mkdir -p ~/.kube
+          echo "${{ secrets.KUBE_CONFIG }}" | base64 -d > ~/.kube/config
+          chmod 600 ~/.kube/config
+
+      # Step 7: Test kubectl access
+      - name: Test kubectl access
+        run: |
+          kubectl cluster-info
+          kubectl get nodes
+
+      # Step 8: Get pods
+      - name: Get pods
+        run: |
+          kubectl get pods -A
+
+      # Step 9: Get LoadBalancer URL
       - name: Get LoadBalancer URL
         run: |
           LB_URL=$(kubectl get svc fastapi-external -n my-app -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
           echo "The LoadBalancer URL is: $LB_URL"
           echo "LB_URL=$LB_URL" >> $GITHUB_ENV  # Set as an environment variable for subsequent steps
 
-      # Step 8: Test FastAPI endpoint
+      # Step 10: Test FastAPI endpoint
       - name: Test FastAPI endpoint
         run: |
           echo "Testing FastAPI endpoint..."
