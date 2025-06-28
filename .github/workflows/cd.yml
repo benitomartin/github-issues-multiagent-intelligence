@@ -1,0 +1,73 @@
+# name: CD Pipeline
+# on:
+#   push:
+#     branches:
+#       - main
+
+# jobs:
+#   build-and-deploy:
+#     runs-on: ubuntu-latest
+
+#     steps:
+#       - name: Checkout code
+#         uses: actions/checkout@v4
+
+#       - name: Set up Python
+#         uses: actions/setup-python@v5
+#         with:
+#           python-version: 3.12
+
+#       - name: Set up AWS CLI
+#         uses: aws-actions/configure-aws-credentials@v1
+#         with:
+#           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+#           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+#           aws-region: ${{ secrets.AWS_REGION }}
+
+#       - name: Build Docker image
+#         run: |
+#           echo "Building Docker image for 'app' service..."
+#           COMPOSE_BAKE=true docker compose -f docker/docker-compose.yml build \
+#             --build-arg APP_ENV=prod \
+#             app
+#           echo "Docker image built."
+
+#       - name: Log in to Amazon ECR
+#         run: |
+#           aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
+
+#       - name: Tag Docker image
+#         run: |
+#           docker tag myapp-prod-image:latest ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/fastapi-app:latest
+
+#       - name: Push Docker image to ECR
+#         run: |
+#           docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/fastapi-app:latest
+
+#       - name: Deploy to Kubernetes
+#         run: |
+#           kubectl apply -f k8s/fastapi-deployment.yml
+#           kubectl apply -f k8s/fastapi-service.yml  # If you have a separate service manifest
+
+#       - name: Wait for deployment to be ready
+#         run: |
+#           kubectl rollout status deployment/fastapi-deployment --namespace my-app --timeout=5m
+
+#       - name: Test FastAPI endpoint
+#         run: |
+#           echo "Testing FastAPI endpoint..."
+#           # Wait for the load balancer to route traffic
+#           timeout 60s bash -c 'until curl -s http://${{ secrets.LB_URL }}/health; do sleep 2; done'
+#           echo "LB URL: ${{ secrets.LB_URL }}"
+
+#           # Test the POST endpoint
+#           curl -X POST "http://${{ secrets.LB_URL }}/process-issue" \
+#             -H "Content-Type: application/json" \
+#             -d '{
+#               "title": "Test Issue",
+#               "body": "huberregressor"
+#             }'
+
+#       - name: Clean up Docker images
+#         run: |
+#           docker system prune -af
