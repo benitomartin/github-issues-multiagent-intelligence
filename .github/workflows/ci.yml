@@ -1,127 +1,127 @@
-# name: CI
-# on:
-#   push:
-#     branches:
-#       - main
+name: CI
+on:
+  push:
+    branches:
+      - main
 
-# jobs:
-#   lint-and-test:
-#     runs-on: ubuntu-latest
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
 
-#     services:
-#       postgres:
-#         image: postgres:13
-#         ports:
-#           - 5432:5432
-#         options: >-
-#           --health-cmd="pg_isready -U postgres"
-#           --health-interval=5s
-#           --health-timeout=3s
-#           --health-retries=5
-#         env:
-#           POSTGRES_USER: myuser
-#           POSTGRES_PASSWORD: mypassword
-#           POSTGRES_DB: github_issues
+    services:
+      postgres:
+        image: postgres:13
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres"
+          --health-interval=5s
+          --health-timeout=3s
+          --health-retries=5
+        env:
+          POSTGRES_USER: myuser
+          POSTGRES_PASSWORD: mypassword
+          POSTGRES_DB: github_issues
 
-#     steps:
-#       - name: Checkout code
-#         uses: actions/checkout@v4
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-#       - name: Install uv
-#         uses: astral-sh/setup-uv@v5
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
 
-#       - name: Set up Python
-#         uses: actions/setup-python@v5
-#         with:
-#           python-version-file: .python-version
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: .python-version
 
-#       - name: Install dependencies
-#         run: uv sync --all-groups
+      - name: Install dependencies
+        run: uv sync --all-groups
 
-#       - name: Create .env file for services
-#         run: |
-#           echo "POSTGRES_USER: myuser" > .env
-#           echo "POSTGRES_PASSWORD: mypassword }}" >> .env
-#           echo "POSTGRES_DB: github_issues }}" >> .env
-#           echo "POSTGRES_HOST=localhost" >> .env
-#           echo "POSTGRES_PORT=5432" >> .env
-#           echo "APP_ENV=dev" >> .env
+      - name: Create .env file for services
+        run: |
+          echo "POSTGRES_USER: myuser" > .env
+          echo "POSTGRES_PASSWORD: mypassword }}" >> .env
+          echo "POSTGRES_DB: github_issues }}" >> .env
+          echo "POSTGRES_HOST=localhost" >> .env
+          echo "POSTGRES_PORT=5432" >> .env
+          echo "APP_ENV=dev" >> .env
 
-#       - name: Wait for PostgreSQL to be ready
-#         run: |
-#           timeout 60s bash -c 'until pg_isready -h localhost -U ${{ secrets.POSTGRES_USER }}; do sleep 2; done'
+      - name: Wait for PostgreSQL to be ready
+        run: |
+          timeout 60s bash -c 'until pg_isready -h localhost -U ${{ secrets.POSTGRES_USER }}; do sleep 2; done'
 
-#       - name: Run Alembic migrations
-#         run: |
-#           uv run alembic upgrade head
-#         env:
-#           POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
-#           POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
-#           POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
-#           POSTGRES_HOST: localhost
-#           POSTGRES_PORT: 5432
+      - name: Run Alembic migrations
+        run: |
+          uv run alembic upgrade head
+        env:
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+          POSTGRES_HOST: localhost
+          POSTGRES_PORT: 5432
 
-#       - name: Ingest GitHub Issues
-#         run: |
-#           echo "Ingesting GitHub issues..."
-#           APP_ENV=dev uv run src/data_pipeline/ingestion.py
-#         env:
-#           POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
-#           POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
-#           POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
-#           POSTGRES_HOST: localhost
-#           POSTGRES_PORT: 5432
-#           ISSUES_TABLE_NAME: ${{ secrets.ISSUES_TABLE_NAME }}
-#           COMMENTS_TABLE_NAME: ${{ secrets.COMMENTS_TABLE_NAME }}
-#           GH_TOKEN: ${{ secrets.GH_TOKEN }}
+      - name: Ingest GitHub Issues
+        run: |
+          echo "Ingesting GitHub issues..."
+          APP_ENV=dev uv run src/data_pipeline/ingestion.py
+        env:
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+          POSTGRES_HOST: localhost
+          POSTGRES_PORT: 5432
+          ISSUES_TABLE_NAME: ${{ secrets.ISSUES_TABLE_NAME }}
+          COMMENTS_TABLE_NAME: ${{ secrets.COMMENTS_TABLE_NAME }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
 
-#       - name: Configure guardrails and install validators
-#         env:
-#           GUARDRAILS_API_KEY: ${{ secrets.GUARDRAILS_API_KEY }}
-#         run: |
-#           uv run guardrails configure --token $GUARDRAILS_API_KEY --disable-metrics --enable-remote-inferencing
-#           uv run guardrails hub install hub://guardrails/toxic_language
-#           uv run guardrails hub install hub://guardrails/detect_jailbreak
-#           uv run guardrails hub install hub://guardrails/secrets_present
+      - name: Configure guardrails and install validators
+        env:
+          GUARDRAILS_API_KEY: ${{ secrets.GUARDRAILS_API_KEY }}
+        run: |
+          uv run guardrails configure --token $GUARDRAILS_API_KEY --disable-metrics --enable-remote-inferencing
+          uv run guardrails hub install hub://guardrails/toxic_language
+          uv run guardrails hub install hub://guardrails/detect_jailbreak
+          uv run guardrails hub install hub://guardrails/secrets_present
 
-#       - name: Format Check
-#         run: |
-#           uv run ruff format --check .
+      - name: Format Check
+        run: |
+          uv run ruff format --check .
 
-#       - name: Lint Check
-#         run: |
-#           uv run ruff check . --fix --exit-non-zero-on-fix
+      - name: Lint Check
+        run: |
+          uv run ruff check . --fix --exit-non-zero-on-fix
 
-#       # - name: Type check with mypy
-#       #   run: uv run mypy
+      # - name: Type check with mypy
+      #   run: uv run mypy
 
-#       - name: Run tests
-#         env:
-#           AWS_REGION: ${{ secrets.AWS_REGION }}
-#           GH_TOKEN: ${{ secrets.GH_TOKEN }}
-#           POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
-#           POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
-#           POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
-#           POSTGRES_HOST: localhost
-#           POSTGRES_PORT: 5432
-#           ADMINER_PORT: ${{ secrets.ADMINER_PORT }}
-#           ISSUES_TABLE_NAME: ${{ secrets.ISSUES_TABLE_NAME }}
-#           COMMENTS_TABLE_NAME: ${{ secrets.COMMENTS_TABLE_NAME }}
-#           DENSE_MODEL_NAME: ${{ secrets.DENSE_MODEL_NAME }}
-#           SPARSE_MODEL_NAME: ${{ secrets.SPARSE_MODEL_NAME }}
-#           LEN_EMBEDDINGS: ${{ secrets.LEN_EMBEDDINGS }}
-#           QDRANT_API_KEY: ${{ secrets.QDRANT_API_KEY }}
-#           QDRANT_URL: ${{ secrets.QDRANT_URL }}
-#           COLLECTION_NAME: ${{ secrets.COLLECTION_NAME }}
-#           CHUNK_SIZE: ${{ secrets.CHUNK_SIZE }}
-#           BATCH_SIZE: ${{ secrets.BATCH_SIZE }}
-#           CONCURRENT_COMMENTS: ${{ secrets.CONCURRENT_COMMENTS }}
-#           LANGSMITH_API_KEY: ${{ secrets.LANGSMITH_API_KEY }}
-#           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-#           LLM_MODEL_NAME: ${{ secrets.LLM_MODEL_NAME }}
-#           TEMPERATURE: ${{ secrets.TEMPERATURE }}
-#           REPOS_CONFIG: ${{ secrets.REPOS_CONFIG }}
-#           GUARDRAILS_CONFIG: ${{ secrets.GUARDRAILS_CONFIG }}
-#           GUARDRAILS_API_KEY: ${{ secrets.GUARDRAILS_API_KEY }}
-#           APP_ENV: dev
-#         run: uv run pytest
+      - name: Run tests
+        env:
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+          POSTGRES_HOST: localhost
+          POSTGRES_PORT: 5432
+          ADMINER_PORT: ${{ secrets.ADMINER_PORT }}
+          ISSUES_TABLE_NAME: ${{ secrets.ISSUES_TABLE_NAME }}
+          COMMENTS_TABLE_NAME: ${{ secrets.COMMENTS_TABLE_NAME }}
+          DENSE_MODEL_NAME: ${{ secrets.DENSE_MODEL_NAME }}
+          SPARSE_MODEL_NAME: ${{ secrets.SPARSE_MODEL_NAME }}
+          LEN_EMBEDDINGS: ${{ secrets.LEN_EMBEDDINGS }}
+          QDRANT_API_KEY: ${{ secrets.QDRANT_API_KEY }}
+          QDRANT_URL: ${{ secrets.QDRANT_URL }}
+          COLLECTION_NAME: ${{ secrets.COLLECTION_NAME }}
+          CHUNK_SIZE: ${{ secrets.CHUNK_SIZE }}
+          BATCH_SIZE: ${{ secrets.BATCH_SIZE }}
+          CONCURRENT_COMMENTS: ${{ secrets.CONCURRENT_COMMENTS }}
+          LANGSMITH_API_KEY: ${{ secrets.LANGSMITH_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          LLM_MODEL_NAME: ${{ secrets.LLM_MODEL_NAME }}
+          TEMPERATURE: ${{ secrets.TEMPERATURE }}
+          REPOS_CONFIG: ${{ secrets.REPOS_CONFIG }}
+          GUARDRAILS_CONFIG: ${{ secrets.GUARDRAILS_CONFIG }}
+          GUARDRAILS_API_KEY: ${{ secrets.GUARDRAILS_API_KEY }}
+          APP_ENV: dev
+        run: uv run pytest

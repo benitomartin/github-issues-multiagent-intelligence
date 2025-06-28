@@ -23,7 +23,7 @@ jobs:
 
       # Step 3: Configure AWS credentials using secrets
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@v4.2.1
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -37,47 +37,80 @@ jobs:
           aws configure set region ${{ secrets.AWS_REGION }} --profile ${{ secrets.AWS_PROFILE }}
           echo "AWS_PROFILE=${{ secrets.AWS_PROFILE }}" >> $GITHUB_ENV
 
-      # Step 5: Verify AWS profile configuration (Optional Debug)
-      - name: Verify AWS profile configuration
+      # Step 5: Set up .env file for Docker Compose
+      - name: Set up .env.${{ secrets.APP_ENV }} file
         run: |
-          echo "=== AWS Profile Configuration ==="
-          aws sts get-caller-identity --profile ${{ secrets.AWS_PROFILE }}
-          aws s3 ls --profile ${{ secrets.AWS_PROFILE }}
+          echo "APP_ENV=${{ secrets.APP_ENV }}" > .env.${{ secrets.APP_ENV }}
+          echo "GUARDRAILS_API_KEY=${{ secrets.GUARDRAILS_API_KEY }}" >> .env.${{ secrets.APP_ENV }}
+          echo "QDRANT_API_KEY=${{ secrets.QDRANT_API_KEY }}" >> .env.${{ secrets.APP_ENV }}
+          echo "QDRANT_URL=${{ secrets.QDRANT_URL }}" >> .env.${{ secrets.APP_ENV }}
+          echo "LANGSMITH_API_KEY=${{ secrets.LANGSMITH_API_KEY }}" >> .env.${{ secrets.APP_ENV }}
+          echo "OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}" >> .env.${{ secrets.APP_ENV }}
+          echo "TEMPERATURE=${{ secrets.TEMPERATURE }}" >> .env.${{ secrets.APP_ENV }}
+          echo "SPARSE_MODEL_NAME=${{ secrets.SPARSE_MODEL_NAME }}" >> .env.${{ secrets.APP_ENV }}
+          echo "REPOS_CONFIG=${{ secrets.REPOS_CONFIG }}" >> .env.${{ secrets.APP_ENV }}
+          echo "LLM_MODEL_NAME=${{ secrets.LLM_MODEL_NAME }}" >> .env.${{ secrets.APP_ENV }}
+          echo "LEN_EMBEDDINGS=${{ secrets.LEN_EMBEDDINGS }}" >> .env.${{ secrets.APP_ENV }}
+          echo "DENSE_MODEL_NAME=${{ secrets.DENSE_MODEL_NAME }}" >> .env.${{ secrets.APP_ENV }}
+          echo "CONCURRENT_COMMENTS=${{ secrets.CONCURRENT_COMMENTS }}" >> .env.${{ secrets.APP_ENV }}
+          echo "COLLECTION_NAME=${{ secrets.COLLECTION_NAME }}" >> .env.${{ secrets.APP_ENV }}
+          echo "CHUNK_SIZE=${{ secrets.CHUNK_SIZE }}" >> .env.${{ secrets.APP_ENV }}
+          echo "BATCH_SIZE=${{ secrets.BATCH_SIZE }}" >> .env.${{ secrets.APP_ENV }}
 
-      # Step 6: Set up kubectl with your pre-configured KUBECONFIG
+      # Step 6: Set up Docker Buildx
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3.11.0
+
+      # Step 7: Log in to Amazon ECR
+      - name: Log in to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2.0.1
+
+      # Step 8: Build and push Docker image to ECR
+      - name: Build and push Docker image to ECR
+        run: |
+          IMAGE_NAME=myapp-${{ secrets.APP_ENV }}-image
+          ECR_URI=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${IMAGE_NAME}
+
+          docker-compose --env-file .env.${{ secrets.APP_ENV }} -f docker-compose.yml build app
+          docker tag ${IMAGE_NAME}:latest $ECR_URI:latest
+          docker push $ECR_URI:latest
+
+      # Step 9: Set up kubectl with KUBECONFIG from secret
       - name: Set up kubectl
         run: |
           mkdir -p ~/.kube
           echo "${{ secrets.KUBE_CONFIG }}" | base64 -d > ~/.kube/config
           chmod 600 ~/.kube/config
 
-      # Step 7: Test kubectl access
+      # Step 10: Update Kubernetes Deployment with new image
+      - name: Update Kubernetes Deployment with new image
+        run: |
+          kubectl set image deployment/fastapi-deployment fastapi=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/myapp-${{ secrets.APP_ENV }}-image:latest -n my-app
+
+      # Step 11: Test kubectl access
       - name: Test kubectl access
         run: |
           kubectl cluster-info
           kubectl get nodes
 
-      # Step 8: Get pods
+      # Step 12: Get pods
       - name: Get pods
         run: |
           kubectl get pods -A
 
-      # Step 9: Get LoadBalancer URL
+      # Step 13: Get LoadBalancer URL
       - name: Get LoadBalancer URL
         run: |
           LB_URL=$(kubectl get svc fastapi-external -n my-app -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
           echo "The LoadBalancer URL is: $LB_URL"
-          echo "LB_URL=$LB_URL" >> $GITHUB_ENV  # Set as an environment variable for subsequent steps
+          echo "LB_URL=$LB_URL" >> $GITHUB_ENV
 
-      # Step 10: Test FastAPI endpoint
+      # Step 14: Test FastAPI endpoint
       - name: Test FastAPI endpoint
         run: |
           echo "Testing FastAPI endpoint..."
-          # Wait for the load balancer to route traffic
           timeout 60s bash -c 'until curl -s http://$LB_URL/health; do sleep 2; done'
           echo "LB URL: $LB_URL"
-
-          # Test the POST endpoint
           curl -X POST "http://$LB_URL/process-issue" \
             -H "Content-Type: application/json" \
             -d '{
