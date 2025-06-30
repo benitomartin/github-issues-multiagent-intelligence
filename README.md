@@ -1,4 +1,4 @@
-# GitHub Issues Multiagent Intelligence
+# GitHub Issues Multiagents Intelligence
 
 <div align="center">
     <img src="img/github-issuses-multiagent-intelligence.png" alt="GitHub Issues Multiagent Intelligence Architecture">
@@ -38,7 +38,7 @@ This project provides an intelligent, multi-agent system for processing, analyzi
 
 ## Table of Contents
 
-- [GitHub Issues Multiagent Intelligence](#github-issues-multiagent-intelligence)
+- [GitHub Issues Multiagents Intelligence](#github-issues-multiagents-intelligence)
   - [Overview](#overview)
   - [Table of Contents](#table-of-contents)
   - [Project Structure](#project-structure)
@@ -63,6 +63,10 @@ This project provides an intelligent, multi-agent system for processing, analyzi
   - [License](#license)
 
 ## Project Structure
+
+<div align="center">
+    <img src="img/langgraph-studio.png" alt="GitHub Issues Multiagent Intelligence Architecture">
+</div>
 
 ```text
 ├── LICENSE
@@ -155,10 +159,6 @@ This project provides an intelligent, multi-agent system for processing, analyzi
 │       └── test_qdrant_collection.py
 └── uv.lock
 ```
-
-<div align="center">
-    <img src="img/langgraph-studio.png" alt="GitHub Issues Multiagent Intelligence Architecture">
-</div>
 
 ## Prerequisites
 
@@ -319,7 +319,7 @@ Make sure to add the environment variables information into the Kubernetes clust
 kubectl create configmap app-config \
                 --from-literal=APP_ENV=prod \
                 --from-literal=AWS_REGION= \
-                --from-literal=POSTGRES_DB=s \
+                --from-literal=POSTGRES_DB= \
                 --from-literal=POSTGRES_HOST=\
                 --from-literal=POSTGRES_PORT= \
                 --from-literal=ADMINER_PORT= \
@@ -343,7 +343,7 @@ kubectl create configmap app-config \
 kubectl create secret generic app-secrets \
                 --from-literal=GH_TOKEN= \
                 --from-literal=POSTGRES_USER= \
-                --from-literal=POSTGRES_PASSWORD==2 \
+                --from-literal=POSTGRES_PASSWORD== \
                 --from-literal=QDRANT_API_KEY= \
                 --from-literal=QDRANT_URL= \
                 --from-literal=LANGSMITH_API_KEY= \
@@ -374,7 +374,7 @@ The adapt the image name in the deployment manifest and apply:
 kubectl apply -f kubernetes/fastapi-deployment.yaml
 ```
 
-As the VPC is in private mode you cannot make request locally. YOu can either forward the port, create an EC2 instance in the same network or add a load balancer into your Kubernetes cluster following these [instructions](https://docs.aws.amazon.com/eks/latest/userguide/lbc-helm.html)
+As the VPC is in private mode you cannot make request locally. YOu can either forward the port, create an EC2 instance in the same network or add a load balancer into your Kubernetes cluster following these [instructions](https://docs.aws.amazon.com/eks/latest/userguide/lbc-helm.html).
 
 Then you can apply the load balancer manifest:
 
