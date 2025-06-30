@@ -52,7 +52,7 @@ drop-tables: ## Drop all tables in the PostgreSQL database
 
 ingest-github-issues: ## Ingest GitHub issues
 	@echo "Ingesting GitHub issues for $(APP_ENV)..."
-	APP_ENV=$(APP_ENV) uv run src/data_pipeline/ingestion.py
+	APP_ENV=$(APP_ENV) uv run src/data_pipeline/ingestion_raw_data.py
 	@echo "GitHub issues ingested successfully."
 
 #################################################################################
@@ -77,7 +77,7 @@ delete-collection: ## Delete Qdrant collection
 
 ingest-embeddings: ## Ingest embeddings into Qdrant
 	@echo "Ingesting embeddings into Qdrant for $(APP_ENV)..."
-	APP_ENV=$(APP_ENV) uv run src/vectorstore/ingest_embeddings.py
+	APP_ENV=$(APP_ENV) uv run src/data_pipeline/ingest_embeddings.py
 	@echo "Embeddings ingested successfully."
 
 #################################################################################

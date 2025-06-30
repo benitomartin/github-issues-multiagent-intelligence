@@ -2,12 +2,12 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from src.vectorstore.ingest_embeddings import ingest_issues_to_qdrant_async
+from src.data_pipeline.ingest_embeddings import ingest_issues_to_qdrant_async
 
 
 @pytest.mark.asyncio
 @patch("src.database.session.db")
-@patch("src.vectorstore.ingest_embeddings.AsyncQdrantVectorStore")
+@patch("src.data_pipeline.ingest_embeddings.AsyncQdrantVectorStore")
 async def test_ingest_issues(mock_vectorstore_cls: MagicMock, mock_get_session: MagicMock) -> None:
     # Setup mock session and query return values
     mock_session = MagicMock()

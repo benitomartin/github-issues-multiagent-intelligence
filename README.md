@@ -1,24 +1,66 @@
-# Project Name
+# GitHub Issues Multiagent Intelligence
 
-## Table of Contents
+<div align="center">
+    <img src="img/github-issuses-multiagent-intelligence.png" alt="GitHub Issues Multiagent Intelligence Architecture">
+</div>
 
-- [Project Name](#project-name)
-  - [Table of Contents](#table-of-contents)
-  - [Overview](#overview)
-  - [Project Structure](#project-structure)
-  - [Prerequisites](#prerequisites)
-  - [Installation](#installation)
-  - [Usage](#usage)
-    - [Configuration](#configuration)
-    - [PostgreSQL](#postgresql)
-      - [Alembic](#alembic)
-    - [AWS CDK](#aws-cdk)
-    - [Testing](#testing)
-  - [License](#license)
+<div align="center">
+    <a href="https://www.python.org/downloads/release/python-3120/"><img src="https://img.shields.io/badge/python-3.12+-blue.svg"/></a>
+    <a href="https://github.com/astral-sh/uv"><img src="https://img.shields.io/badge/uv-Package%20Manager-blue"/></a>
+    <a href="https://www.langchain.com/langgraph"><img src="https://img.shields.io/badge/LangGraph-Agents-orange"/></a>
+    <a href="https://qdrant.tech/"><img src="https://img.shields.io/badge/Qdrant-Database-red"/></a>
+    <a href="https://www.guardrailsai.com/"><img src="https://img.shields.io/badge/Guardrails AI-Guardrails-green"/></a>
+    <a href="https://fastapi.tiangolo.com/"><img src="https://img.shields.io/badge/FastAPI-API-green"/></a>
+    <a href="https://pydantic.dev/"><img src="https://img.shields.io/badge/Pydantic-Data%20Validation-e92063"/></a>
+</div>
+<div align="center">
+    <a href="https://github.com/features/actions"><img src="https://img.shields.io/badge/CICD-passed-2088ff"/></a>
+    <a href="http://mypy-lang.org/"><img src="https://img.shields.io/badge/mypy-passed-blue"/></a>
+    <a href="https://github.com/astral-sh/ruff"><img src="https://img.shields.io/badge/ruff-passed-red"/></a>
+    <a href="https://docs.pytest.org/"><img src="https://img.shields.io/badge/pytest-passed-brightgreen"/></a>
+    <a href="https://github.com/pre-commit/pre-commit"><img src="https://img.shields.io/badge/pre--commit-passed-brightgreen"/></a>
+    <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg"/></a>
+</div>
+<p align="center">
+    <em>A modular pipeline for searching and analyzing GitHub issues and providing recommendations for issues classification</em>
+</p>
+
+______________________________________________________________________
+
+This project provides an intelligent, multi-agent system for processing, analyzing, and managing GitHub issues at scale. It leverages LLMs, vector databases, and cloud-native kubernetes infrastructure to automate search, triage, and enrichment of GitHub issues, supporting advanced workflows and integration using LangGraph agents.
 
 ## Overview
 
-Briefly describe the project, its purpose, and key features.
+- Multi-agent orchestration for issue processing
+- Integration with GitHub, PostgreSQL, and Qdrant vector store
+- Modular architecture for agents, guardrails, tools, and pipelines
+- Infrastructure-as-code with AWS CDK and Kubernetes support
+
+## Table of Contents
+
+- [GitHub Issues Multiagent Intelligence](#github-issues-multiagent-intelligence)
+  - [Overview](#overview)
+  - [Table of Contents](#table-of-contents)
+  - [Project Structure](#project-structure)
+  - [Prerequisites](#prerequisites)
+  - [Installation](#installation)
+    - [Clone the repository](#clone-the-repository)
+    - [Configure Environment](#configure-environment)
+    - [Copy and configure environment variables](#copy-and-configure-environment-variables)
+  - [Usage](#usage)
+    - [Configuration](#configuration)
+    - [Makefile](#makefile)
+    - [PostgreSQL](#postgresql)
+      - [Alembic Migrations](#alembic-migrations)
+      - [Guardrails](#guardrails)
+    - [AWS CDK](#aws-cdk)
+    - [Testing](#testing)
+  - [API](#api)
+  - [Kubernetes](#kubernetes)
+    - [Cluster Configuration](#cluster-configuration)
+    - [Secrets and Configmap](#secrets-and-configmap)
+    - [Production Docker Image](#production-docker-image)
+  - [License](#license)
 
 ## Project Structure
 
@@ -27,303 +69,330 @@ Briefly describe the project, its purpose, and key features.
 ├── Makefile
 ├── README.md
 ├── alembic.ini
-├── configs
-│   ├── dev.yaml                  # Configuration file for development environment
-│   └── staging.yaml              # Configuration file for staging environment
-├── github_test_request.py
-├── infrastructure
-│   └── docker-compose.yml        # Docker Compose file for development environment
-├── migrations                    # Alembic migration files
+├── aws_cdk_infra
+│   ├── README.md
+│   ├── app.py
+│   ├── aws_eks_rds
+│   │   ├── __init__.py
+│   │   ├── eks_stack.py
+│   │   ├── rds_stack.py
+│   │   └── vpc_stack.py
+│   ├── requirements.txt
+│   └── source.bat
+├── docker
+│   ├── dev.Dockerfile
+│   ├── docker-compose.yml
+│   └── prod.Dockerfile
+├── env.example
+├── kubernetes
+│   ├── fastapi-deployment.yaml
+│   ├── fastapi-service.yaml
+│   ├── iam_policy.json
+│   └── test-pod.yaml
+├── langgraph.json
+├── migrations
 │   ├── README
 │   ├── env.py
 │   ├── script.py.mako
 │   └── versions
-│       └── d84b3a18383b_describe_change.py
+│       └── 77e4d0a13aa8_create_comments_and_issues_table.py
 ├── pyproject.toml
 ├── scripts
 │   └── lint-makefile.sh
 ├── src
 │   ├── __init__.py
+│   ├── agents
+│   │   ├── __init__.py
+│   │   ├── agents.py
+│   │   ├── graph.py
+│   │   └── graph_service.py
+│   ├── api
+│   │   ├── __init__.py
+│   │   └── main.py
 │   ├── config
-│   │   └── repos.yaml              # Repository configuration file
+│   │   ├── guardrails.yaml
+│   │   └── repos.yaml
 │   ├── data_pipeline
 │   │   ├── __init__.py
-│   │   └── ingestion.py            # Module for data ingestion
-│   ├── database                    # Module for database operations
+│       ├── ingest_embeddings.py
+│   │   └── ingest_raw_data.py
+│   ├── database
 │   │   ├── __init__.py
 │   │   ├── drop_tables.py
 │   │   ├── init_db.py
 │   │   └── session.py
-│   ├── models                      # Module for database models
+│   ├── models
 │   │   ├── __init__.py
+│   │   ├── agent_models.py
+│   │   ├── api_model.py
 │   │   ├── db_models.py
+│   │   ├── github_models.py
+│   │   ├── guardrails_models.py
 │   │   └── repo_models.py
-│   └── utils                       # Module for utility functions
-│       └── config.py
+│   ├── utils
+│   │   ├── __init__.py
+│   │   ├── config.py
+│   │   ├── error_handler.py
+│   │   ├── guardrails.py
+│   │   └── promps.py
+│   └── vectorstore
+│       ├── __init__.py
+│       ├── create_collection.py
+│       ├── create_index.py
+│       ├── delete_collection.py
+│       ├── payload_builder.py
+│       ├── qdrant_store.py
+│       └── qdrant_store_sync.py
+├── tests
+│   ├── integration
+│   │   ├── test_api_process_issue.py
+│   │   ├── test_full_graph_output_guardrails.py
+│   │   └── test_query_search.py
+│   └── unit
+│       ├── test_db_ingest_qdrant.py
+│       ├── test_input_guardrail_agent.py
+│       ├── test_output_guardrail_agent.py
+│       └── test_qdrant_collection.py
 └── uv.lock
 ```
 
-```text
-github-issues-multiagent-intelligence/
-├── README.md
-├── .gitignore
-├── uv.lock
-├── pyproject.toml
-├── Makefile
-├── docker-compose.yml               # Compose file for Qdrant + Postgres + API + optional tools
-├── .dockerignore
-├── .github/
-│   └── workflows/
-│       ├── ci.yml
-│       └── cd.yml
-├── infrastructure/
-│   ├── cdk/
-│   │   ├── app.py
-│   │   ├── cdk.json
-│   │   ├── requirements.txt
-│   │   └── stacks/
-│   │       ├── __init__.py
-│   │       ├── vector_db_stack.py
-│   │       ├── api_stack.py
-│   │       ├── agent_stack.py
-│   │       └── monitoring_stack.py
-│   └── docker/                      # Docker-specific files for services
-│       ├── qdrant/                  # Qdrant-specific Docker setup (configs, maybe init scripts)
-│       │   └── README.md
-│       ├── postgres/                # PostgreSQL-specific configs, init scripts
-│       │   ├── init.sql             # Example: DB schema or seed data scripts
-│       │   └── README.md
-│       └── README.md
-├── src/
-│   ├── __init__.py
-│   ├── agents/
-│   │   ├── __init__.py
-│   │   ├── base_agent.py
-│   │   ├── research_agent.py
-│   │   └── orchestrator.py
-│   ├── tools/
-│   │   ├── __init__.py
-│   │   ├── web_search.py
-│   │   ├── document_retrieval.py
-│   │   └── calculator.py
-│   ├── vector_store/
-│   │   ├── __init__.py
-│   │   ├── qdrant_client.py
-│   │   └── embeddings.py
-│   ├── database/
-│   │   ├── __init__.py
-│   │   ├── models.py                # Pydantic and/or SQLAlchemy models for PostgreSQL
-│   │   ├── crud.py                  # DB access layer (create/read/update/delete)
-│   │   └── session.py               # DB connection/session management
-│   ├── api/
-│   │   ├── __init__.py
-│   │   ├── main.py
-│   │   └── routes/
-│   │       ├── agents.py
-│   │       └── health.py
-│   ├── llm/
-│   │   ├── __init__.py
-│   │   ├── bedrock_client.py
-│   │   └── prompt_templates.py
-│   ├── prompts/
-│   │   ├── __init__.py
-│   │   └── issue_prompts.py         # Prompt templates for GitHub issues agent(s)
-│   ├── models/
-│   │   ├── __init__.py
-│   │   └── github_issue_models.py  # Pydantic models representing issue data structures
-│   ├── data_pipeline/
-│   │   ├── __init__.py
-│   │   ├── ingestion.py             # ETL pipeline: from raw GitHub to DB to Qdrant
-│   │   └── preprocessing.py
-│   ├── evaluation/
-│   │   ├── __init__.py
-│   │   ├── metrics.py               # Evaluation metrics (e.g. accuracy, precision for classification)
-│   │   └── observability.py         # Integrations with Opik or other monitoring
-│   └── utils/
-│       ├── __init__.py
-│       ├── config.py
-│       ├── logging.py
-│       └── metrics.py
-├── tests/
-│   ├── unit/
-│   │   ├── test_agents.py
-│   │   └── test_tools.py
-│   └── integration/
-│       └── test_api.py
-├── configs/
-│   ├── dev.yaml
-│   ├── staging.yaml
-│   └── prod.yaml
-├── monitoring/
-│   ├── cloudwatch_dashboards.py
-│   ├── alerts.py
-│   └── custom_metrics.py
-├── scripts/
-│   ├── deploy.sh
-│   ├── seed_vector_db.py
-│   └── cost_analysis.py
-└── docs/
-    ├── architecture.md
-    ├── api-documentation.md
-    └── business-case.md
-
-```
+<div align="center">
+    <img src="img/langgraph-studio.png" alt="GitHub Issues Multiagent Intelligence Architecture">
+</div>
 
 ## Prerequisites
 
-- Python 3.12
-- XXX
+- [Python 3.12+](https://www.python.org/downloads/release/python-3120/)
+- [uv](https://github.com/astral-sh/uv)
+- [Docker & Docker Compose](https://docs.docker.com/get-docker/)
+- [PostgreSQL](https://www.postgresql.org/)
+- [Qdrant](https://qdrant.tech/)
+- [AWS CLI (for CDK)](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
+- [Node.js (for AWS CDK)](https://nodejs.org/)
+- [Kubernetes CLI (`kubectl`)](https://kubernetes.io/docs/tasks/tools/)
+- [OpenAI API Key](https://platform.openai.com/account/api-keys)
+- [Guardrails AI API Key](https://www.guardrailsai.com/)
+- [GitHub Token](https://github.com/settings/tokens)
 
 ## Installation
 
-1. Clone the repository:
+### Clone the repository
 
-   ```bash
-   git clone XXX
-   cd XXX
-   ```
+```bash
+git clone https://github.com/benitomartin/github-issues-multiagent-intelligence.git
+cd github-issues-multiagent-intelligence
+```
 
-1. Create a virtual environment:
+### Configure Environment
 
-   ```bash
-   uv venv
-   ```
+```bash
+uv sync --all-groups
+source ./.venv/bin/activate
+```
 
-1. Activate the virtual environment:
+### Copy and configure environment variables
 
-   - On Windows:
+There must be two environments created (development and production):
 
-     ```bash
-     .venv\Scripts\activate
-     ```
+```bash
+cp env.example .env.dev
+cp env.example .env.prod
+```
 
-   - On Unix or MacOS:
-
-     ```bash
-     source .venv/bin/activate
-     ```
-
-1. Install the required packages:
-
-   ```bash
-   uv sync --all-groups --all-extra
-   ```
-
-1. Create a `.env` file in the root directory:
-
-   ```bash
-    cp .env.example .env
-   ```
+The development mode runs on localhost. The production mode runs with Aurora RDS as database and AWS EKS with Fargate for the FastAPI.
 
 ## Usage
 
 ### Configuration
 
-Configure API keys, model names, and other settings by editing:
+Edit configuration files in [`src/config`](src/config) and environment variables in `.env` to set API keys, model names, and other settings.
 
-src/configs/settings.py
-src/configs/config.yaml
+### Makefile
+
+The make file contains all commands from building the Dockerfile, ingestion into the PostgreSQL and into the Qdrant vector database. The variable APP_ENV (dev, prod) must be provided to run most of the command.
+
+```bash
+make init-db APP_ENV=dev
+```
 
 ### PostgreSQL
 
-Initialize the PostgreSQL database:
+Start the database and supporting services wither in development or production mode:
 
 ```bash
-docker-compose up -d
+make docker-build APP_ENV=dev
 ```
 
-Then got to http://localhost:8080 to connect to your database GUI via Adminer.
+Access Adminer at [http://localhost:8080](http://localhost:8080).
 
-| Field        | Value           |
-| ------------ | --------------- |
-| **System**   | PostgreSQL      |
-| **Server**   | `postgres`      |
-| **Username** | `myuser`        |
-| **Password** | `mypassword`    |
-| **Database** | `github_issues` |
+#### Alembic Migrations
 
-#### Alembic
-
-To modify the Schema run this to create the `alembic.ini` and migrations folders:
+Update the database schema:
 
 ```bash
-alembic init migrations
-```
-
-Add the following to alembic.ini:
-
-```ini
-sqlalchemy.url = postgresql+psycopg2://myuser:mypassword@localhost:5432/github_issues
-```
-
-Also in env.py point to the `db_models.py`
-
-Then run to update the schema:
-
-```bash
-alembic revision --autogenerate -m "Change issue_id to BigInteger"
 alembic upgrade head
+```
+
+#### Guardrails
+
+Guardrails must be configure with the API Key adding it after running this command:
+
+```bash
+guardrails configure
+```
+
+Afterwards, the individual guardrails must be installed:
+
+```bash
+guardrails hub install hub://guardrails/toxic_language
+guardrails hub install hub://guardrails/detect_jailbreak
+guardrails hub install hub://guardrails/secrets_present
 ```
 
 ### AWS CDK
 
-From the root of the project:
+Install dependencies in a separate virtual environment:
+
+```bash
+pip install -r aws_cdk_infra/requirements.txt
+```
+
+Deploy infrastructure:
+
+- VCP
+- EKS with Fargate
+- Aurora RDS
 
 ```bash
 cd aws_cdk_infra
-cdk init
 cdk bootstrap
 cdk deploy
 ```
 
 ### Testing
 
-Run all tests:
-
-Run all quality checks (lint, format, type check, clean):
+Run all tests (unit and integration):
 
 ```bash
-make all
+make all-tests
 ```
 
-Individual Commands:
+Or run individual test suites.
 
-- Display all available commands:
+## API
 
-  ```bash
-  make help
-  ```
+The FastAPI server is defined in [`src/api/main.py`](src/api/main.py).
+Start the API server (example):
 
-- Check code formatting:
+```bash
+uvicorn src.api.main:app --reload
+```
 
-  ```bash
-  make ruff-check
-  ```
+```bash
+{
+"title": "Test Issue",
+"body": "Test Issue"
+}
+```
 
-- Format code:
+API docs available at `/docs` when running.
 
-  ```bash
-  make ruff-format
-  ```
+## Kubernetes
 
-- Lint code:
+Kubernetes manifests are in [`kubernetes`](kubernetes). Once the CDK Stack has been deployed, the environment variables must be adapted. Sensitive information can be found under AWS Secrets Manager.
 
-  ```bash
-  make ruff-lint
-  ```
+### Cluster Configuration
 
-- Type check
+Update your cluster configuration and add a new name space:
 
-  ```bash
-  make mypy
-  ```
+```bash
+aws eks --region <aus-region> update-kubeconfig --name <cluster-name>
 
-- Clean cache and build files:
+kubectl create namespace my-app
+```
 
-  ```bash
-  make clean
-  ```
+### Secrets and Configmap
+
+Make sure to add the environment variables information into the Kubernetes cluster:
+
+```bash
+kubectl create configmap app-config \
+                --from-literal=APP_ENV=prod \
+                --from-literal=AWS_REGION= \
+                --from-literal=POSTGRES_DB=s \
+                --from-literal=POSTGRES_HOST=\
+                --from-literal=POSTGRES_PORT= \
+                --from-literal=ADMINER_PORT= \
+                --from-literal=ISSUES_TABLE_NAME= \
+                --from-literal=COMMENTS_TABLE_NAME= \
+                --from-literal=DENSE_MODEL_NAME= \
+                --from-literal=SPARSE_MODEL_NAME= \
+                --from-literal=LEN_EMBEDDINGS= \
+                --from-literal=COLLECTION_NAME= \
+                --from-literal=CHUNK_SIZE= \
+                --from-literal=BATCH_SIZE= \
+                --from-literal=CONCURRENT_COMMENTS= \
+                --from-literal=LLM_MODEL_NAME= \
+                --from-literal=TEMPERATURE= \
+                --from-literal=REPOS_CONFIG=src/config/repos.yaml \
+                --from-literal=GUARDRAILS_CONFIG=src/config/guardrails.yaml \
+                -n my-app
+```
+
+```bash
+kubectl create secret generic app-secrets \
+                --from-literal=GH_TOKEN= \
+                --from-literal=POSTGRES_USER= \
+                --from-literal=POSTGRES_PASSWORD==2 \
+                --from-literal=QDRANT_API_KEY= \
+                --from-literal=QDRANT_URL= \
+                --from-literal=LANGSMITH_API_KEY= \
+                --from-literal=OPENAI_API_KEY= \
+                --from-literal=GUARDRAILS_API_KEY= \
+                --from-literal=SECRET_NAME= \
+                -n my-app
+```
+
+### Production Docker Image
+
+You need to build and push the image in production and send it to AWS ECR:
+
+```bash
+
+aws ecr get-login-password --region eu-central-1 | docker login --username AWS --password-stdin <aws-account-id>.dkr.ecr.<aus-region>.amazonaws.com
+
+aws ecr create-repository --repository-name fastapi-app --region <aus-region>
+
+docker tag myapp-prod-image:latest <aws-account-id>.dkr.ecr.<aus-region>.amazonaws.com/fastapi-app:latest
+
+docker push <aws-account-id>.dkr.ecr.<aus-region>.amazonaws.com/fastapi-app:latest
+```
+
+The adapt the image name in the deployment manifest and apply:
+
+```bash
+kubectl apply -f kubernetes/fastapi-deployment.yaml
+```
+
+As the VPC is in private mode you cannot make request locally. YOu can either forward the port, create an EC2 instance in the same network or add a load balancer into your Kubernetes cluster following these [instructions](https://docs.aws.amazon.com/eks/latest/userguide/lbc-helm.html)
+
+Then you can apply the load balancer manifest:
+
+```bash
+kubectl apply -f kubernetes/fastapi-service.yaml
+```
+
+These will expose and External IP that can be use to make requests:
+
+```bash
+curl -X POST "http://k8s-myapp-fastapie-96d739e92d-4d28b27c27683b40.elb.eu-central-1.amazonaws.com/process-issue" \
+-H "Content-Type: application/json" \
+-d '{
+"title": "Test Issue",
+"body": "Test Issue"
+}'
+```
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License. See the [LICENSE](LICENSE)
