@@ -199,7 +199,7 @@ cp env.example .env.dev
 cp env.example .env.prod
 ```
 
-The development mode runs on localhost. The production mode runs with Aurora RDS as database and AWS EKS with Fargate for the FastAPI.
+The development mode runs on localhost. The production mode runs with RDS as database and AWS EKS with Fargate for the FastAPI.
 
 ## Usage
 
@@ -259,9 +259,9 @@ pip install -r aws_cdk_infra/requirements.txt
 
 Deploy infrastructure:
 
+- AWS EKS with Fargate and Load Balancer
+- AWS RDS
 - VCP
-- EKS with Fargate
-- Aurora RDS
 
 ```bash
 cd aws_cdk_infra
