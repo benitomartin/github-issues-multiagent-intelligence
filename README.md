@@ -233,7 +233,7 @@ Update the database schema:
 alembic upgrade head
 ```
 
-#### Guardrails
+### Guardrails
 
 Guardrails must be configure with the API Key adding it after running this command:
 
