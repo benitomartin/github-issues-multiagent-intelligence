@@ -27,7 +27,7 @@
 
 ______________________________________________________________________
 
-This project provides an intelligent, multi-agent system for processing, analyzing, and managing GitHub issues at scale. It leverages LLMs, vector databases, and cloud-native kubernetes infrastructure to automate search, triage, and enrichment of GitHub issues, supporting advanced workflows and integration using LangGraph agents.
+This project provides an intelligent, multi-agent system for processing, analyzing, and managing GitHub issues at scale. It leverages LLMs, vector databases, and cloud-native Kubernetes infrastructure to automate search, triage, and enrichment of GitHub issues, supporting advanced workflows and integration using LangGraph agents.
 
 ## Overview
 
@@ -52,7 +52,7 @@ This project provides an intelligent, multi-agent system for processing, analyzi
     - [Makefile](#makefile)
     - [PostgreSQL](#postgresql)
       - [Alembic Migrations](#alembic-migrations)
-      - [Guardrails](#guardrails)
+    - [Guardrails](#guardrails)
     - [AWS CDK](#aws-cdk)
     - [Testing](#testing)
   - [API](#api)
@@ -199,7 +199,7 @@ cp env.example .env.dev
 cp env.example .env.prod
 ```
 
-The development mode runs on localhost. The production mode runs with RDS as database and AWS EKS with Fargate for the FastAPI.
+The development mode runs on localhost. The production mode runs with RDS as the database and AWS EKS with Fargate for FastAPI.
 
 ## Usage
 
@@ -209,7 +209,7 @@ Edit configuration files in [`src/config`](src/config) and environment variables
 
 ### Makefile
 
-The make file contains all commands from building the Dockerfile, ingestion into the PostgreSQL and into the Qdrant vector database. The variable APP_ENV (dev, prod) must be provided to run most of the command.
+The Makefile contains all commands for building the Dockerfile, ingestion into PostgreSQL, and the Qdrant vector database. The variable APP_ENV (dev, prod) must be provided to run most of the commands.
 
 ```bash
 make init-db APP_ENV=dev
@@ -217,7 +217,7 @@ make init-db APP_ENV=dev
 
 ### PostgreSQL
 
-Start the database and supporting services wither in development or production mode:
+Start the database and supporting services, either in development or production mode:
 
 ```bash
 make docker-build APP_ENV=dev
@@ -235,7 +235,7 @@ alembic upgrade head
 
 ### Guardrails
 
-Guardrails must be configure with the API Key adding it after running this command:
+Guardrails must be configured with the API Key, adding it after running this command:
 
 ```bash
 guardrails configure
@@ -295,7 +295,7 @@ uvicorn src.api.main:app --reload
 }
 ```
 
-API docs available at `/docs` when running.
+API docs are available at `/docs` when running.
 
 ## Kubernetes
 
@@ -303,7 +303,7 @@ Kubernetes manifests are in [`kubernetes`](kubernetes). Once the CDK Stack has b
 
 ### Cluster Configuration
 
-Update your cluster configuration and add a new name space:
+Update your cluster configuration and add a new namespace:
 
 ```bash
 aws eks --region <aus-region> update-kubeconfig --name <cluster-name>
@@ -313,7 +313,7 @@ kubectl create namespace my-app
 
 ### Secrets and Configmap
 
-Make sure to add the environment variables information into the Kubernetes cluster:
+Make sure to add the environment variables information to the Kubernetes cluster:
 
 ```bash
 kubectl create configmap app-config \
@@ -368,13 +368,13 @@ docker tag myapp-prod-image:latest <aws-account-id>.dkr.ecr.<aus-region>.amazona
 docker push <aws-account-id>.dkr.ecr.<aus-region>.amazonaws.com/fastapi-app:latest
 ```
 
-The adapt the image name in the deployment manifest and apply:
+Then adapt the image name in the deployment manifest and apply:
 
 ```bash
 kubectl apply -f kubernetes/fastapi-deployment.yaml
 ```
 
-As the VPC is in private mode you cannot make request locally. YOu can either forward the port, create an EC2 instance in the same network or add a load balancer into your Kubernetes cluster following these [instructions](https://docs.aws.amazon.com/eks/latest/userguide/lbc-helm.html).
+As the VPC is in private mode, you cannot make a request locally. You can either forward the port, create an EC2 instance in the same network, or add a load balancer to your Kubernetes cluster following these [instructions](https://docs.aws.amazon.com/eks/latest/userguide/lbc-helm.html).
 
 Then you can apply the load balancer manifest:
 
@@ -382,7 +382,7 @@ Then you can apply the load balancer manifest:
 kubectl apply -f kubernetes/fastapi-service.yaml
 ```
 
-These will expose and External IP that can be use to make requests:
+These will expose an External IP that can be used to make requests:
 
 ```bash
 curl -X POST "http://k8s-myapp-fastapie-96d739e92d-4d28b27c27683b40.elb.eu-central-1.amazonaws.com/process-issue" \
