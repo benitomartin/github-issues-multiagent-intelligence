@@ -68,3 +68,62 @@ class EKSStack(Stack):
             selectors=[{"namespace": "my-app", "labels": {"app": "fastapi"}}],
             pod_execution_role=pod_execution_role,
         )
+
+        # # Add ConfigMap and Secrets for the FastAPI app
+        # eks_cluster.add_manifest(
+        #     "AppConfigMap",
+        #     {
+        #         "apiVersion": "v1",
+        #         "kind": "ConfigMap",
+        #         "metadata": {
+        #             "name": "app-config",
+        #             "namespace": "my-app"
+        #         },
+        #         "data": {
+        #             "APP_ENV": "prod",
+        #             "AWS_REGION": os.getenv("AWS_REGION"),
+        #             "POSTGRES_DB": os.getenv("POSTGRES_DB"),
+        #             "POSTGRES_PORT": os.getenv("POSTGRES_PORT"),
+        #             "ADMINER_PORT": os.getenv("ADMINER_PORT"),
+        #             "ISSUES_TABLE_NAME": os.getenv("ISSUES_TABLE_NAME"),
+        #             "COMMENTS_TABLE_NAME": os.getenv("COMMENTS_TABLE_NAME"),
+        #             "DENSE_MODEL_NAME": os.getenv("DENSE_MODEL_NAME"),
+        #             "SPARSE_MODEL_NAME": os.getenv("SPARSE_MODEL_NAME"),
+        #             "LEN_EMBEDDINGS": os.getenv("LEN_EMBEDDINGS"),
+        #             "COLLECTION_NAME": os.getenv("COLLECTION_NAME"),
+        #             "CHUNK_SIZE": os.getenv("CHUNK_SIZE"),
+        #             "BATCH_SIZE": os.getenv("BATCH_SIZE"),
+        #             "CONCURRENT_COMMENTS": os.getenv("CONCURRENT_COMMENTS"),
+        #             "LLM_MODEL_NAME": os.getenv("LLM_MODEL_NAME"),
+        #             "TEMPERATURE": os.getenv("TEMPERATURE"),
+        #             "REPOS_CONFIG": "src/config/repos.yaml",
+        #             "GUARDRAILS_CONFIG": "src/config/guardrails.yaml",
+        #         }
+        #     }
+        # )
+
+        # # Add this after creating your `eks_cluster`
+        # eks_cluster.add_manifest(
+        #     "AppSecrets",
+        #     {
+        #         "apiVersion": "v1",
+        #         "kind": "Secret",
+        #         "metadata": {
+        #             "name": "app-secrets",
+        #             "namespace": "my-app"
+        #         },
+        #         "type": "Opaque",
+        #         "stringData": {
+        #             "GH_TOKEN": os.getenv("GH_TOKEN"),
+        #             "POSTGRES_USER": os.getenv("POSTGRES_USER"),
+        #             "POSTGRES_HOST": os.getenv("POSTGRES_HOST"),
+        #             "POSTGRES_PASSWORD": os.getenv("POSTGRES_PASSWORD"),
+        #             "QDRANT_API_KEY": os.getenv("QDRANT_API_KEY"),
+        #             "QDRANT_URL": os.getenv("QDRANT_URL"),
+        #             "LANGSMITH_API_KEY": os.getenv("LANGSMITH_API_KEY"),
+        #             "OPENAI_API_KEY": os.getenv("OPENAI_API_KEY"),
+        #             "GUARDRAILS_API_KEY": os.getenv("GUARDRAILS_API_KEY"),
+        #             "SECRET_NAME": os.getenv("SECRET_NAME"),
+        #         }
+        #     }
+        # )

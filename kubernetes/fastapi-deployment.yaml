@@ -35,11 +35,6 @@ spec:
                 configMapKeyRef:
                   name: app-config
                   key: POSTGRES_DB
-            - name: POSTGRES_HOST
-              valueFrom:
-                configMapKeyRef:
-                  name: app-config
-                  key: POSTGRES_HOST
             - name: POSTGRES_PORT
               valueFrom:
                 configMapKeyRef:
@@ -72,6 +67,11 @@ spec:
                 secretKeyRef:
                   name: app-secrets
                   key: POSTGRES_USER
+            - name: POSTGRES_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: POSTGRES_HOST
             - name: POSTGRES_PASSWORD
               valueFrom:
                 secretKeyRef:
@@ -107,11 +107,11 @@ spec:
                 secretKeyRef:
                   name: app-secrets
                   key: SECRET_NAME
-            - name: AWS_ACCOUNT_ID
-              valueFrom:
-                secretKeyRef:
-                  name: aws-account-secret
-                  key: AWS_ACCOUNT_ID
+            # - name: AWS_ACCOUNT_ID
+            #   valueFrom:
+            #     secretKeyRef:
+            #       name: aws-account-secret
+            #       key: AWS_ACCOUNT_ID
 
           # Startup probe - gives the app time to start
           startupProbe:

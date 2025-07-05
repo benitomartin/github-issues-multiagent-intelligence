@@ -320,7 +320,6 @@ kubectl create configmap app-config \
                 --from-literal=APP_ENV=prod \
                 --from-literal=AWS_REGION= \
                 --from-literal=POSTGRES_DB= \
-                --from-literal=POSTGRES_HOST=\
                 --from-literal=POSTGRES_PORT= \
                 --from-literal=ADMINER_PORT= \
                 --from-literal=ISSUES_TABLE_NAME= \
@@ -343,6 +342,7 @@ kubectl create configmap app-config \
 kubectl create secret generic app-secrets \
                 --from-literal=GH_TOKEN= \
                 --from-literal=POSTGRES_USER= \
+                --from-literal=POSTGRES_HOST=\
                 --from-literal=POSTGRES_PASSWORD== \
                 --from-literal=QDRANT_API_KEY= \
                 --from-literal=QDRANT_URL= \
