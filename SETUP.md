@@ -1,12 +1,12 @@
 Project set up instructions:
 
-- **AWS Account:** An AWS account with the necessary credentials is required to be able to deploy the AWS CDK Stack. Additionally, make sure you install the AWS CDK CLI following these instructions.
+- **AWS Account:** An AWS account with the necessary credentials is required to be able to deploy the AWS CDK Stack. Additionally, make sure you install the AWS CDK CLI following these [instructions](https://docs.aws.amazon.com/cdk/v2/guide/getting-started.html).
 
-- **Kubernetes:** You need to install the Kubernetes CLI (kubectl) on your computer to interact with it. Follow the instructions of your operating system here.
+- **Kubernetes:** You need to install the Kubernetes CLI (kubectl) on your computer to interact with it. Follow the instructions of your operating system [here](https://docs.aws.amazon.com/eks/latest/userguide/install-kubectl.html).
 
-- **K9s:** Provides a terminal UI to interact with your Kubernetes clusters. Although it is not strictly necessary to install it, it allows access to your Kubernetes cluster from an interactive UI, making it easy to navigate through it (you won’t regret installing it!). Follow the instructions of your operating system here.
+- **K9s:** Provides a terminal UI to interact with your Kubernetes clusters. Although it is not strictly necessary to install it, it allows access to your Kubernetes cluster from an interactive UI, making it easy to navigate through it (you won’t regret installing it!). Follow the instructions of your operating system [here](https://github.com/derailed/k9s).
 
-- **Guardrails:** Guardrails AI requires a configuration file for setup. You will need to obtain a free GUARDRAILS_API_KEY to install and use the agents. The quick start guide can be found here to help you get started with this configuration, but there are mainly 2 steps to perform. First, configure the config file by running this command and providing the GUARDRAILS_API_KEY:
+- **Guardrails:** Guardrails AI requires a configuration file for setup. You will need to obtain a free GUARDRAILS_API_KEY to install and use the agents. The quick start guide can be found [here](https://www.guardrailsai.com/docs/getting_started/quickstart) to help you get started with this configuration, but there are mainly 2 steps to perform. First, configure the config file by running this command and providing the GUARDRAILS_API_KEY:
 
   ```bash
   guardrails configure
