@@ -72,6 +72,7 @@ This project provides an intelligent, multi-agent system for processing, analyzi
 ├── LICENSE
 ├── Makefile
 ├── README.md
+├── SETUP.md
 ├── alembic.ini
 ├── aws_cdk_infra
 │   ├── README.md
@@ -205,15 +206,7 @@ The development mode runs on localhost. The production mode runs with RDS as the
 
 ### Configuration
 
-Edit configuration files in [`src/config`](src/config) and environment variables in `.env` to set API keys, model names, and other settings.
-
-### Makefile
-
-The Makefile contains all commands for building the Dockerfile, ingestion into PostgreSQL, and the Qdrant vector database. The variable APP_ENV (dev, prod) must be provided to run most of the commands.
-
-```bash
-make init-db APP_ENV=dev
-```
+You must follow the [SETUP.md](https://github.com/benitomartin/github-issues-multiagent-intelligence/blob/main/SETUP.md) first before running the blow commands:
 
 ### PostgreSQL
 
@@ -233,20 +226,34 @@ Update the database schema:
 alembic upgrade head
 ```
 
-### Guardrails
+### Repositories
 
-Guardrails must be configured with the API Key, adding it after running this command:
+This file defines which repositories to pull issues from, how many issues to pull, and in what state (e.g. open, closed, or all).
 
 ```bash
-guardrails configure
+- owner: scikit-learn
+  repo: scikit-learn
+  state: all
+  per_page: 100
+  max_pages: 1
 ```
 
-Afterwards, the individual guardrails must be installed:
+### Guardrails
+
+This file configures the thresholds for Guardrails agents like jailbreak, toxicity, and secrets detection.
 
 ```bash
-guardrails hub install hub://guardrails/toxic_language
-guardrails hub install hub://guardrails/detect_jailbreak
-guardrails hub install hub://guardrails/secrets_present
+jailbreak:
+  threshold: 0.8
+  on_fail: "filter"
+
+toxicity:
+  threshold: 0.5
+  validation_method: "full"
+  on_fail: "filter"
+
+secrets:
+  on_fail: "filter"
 ```
 
 ### AWS CDK
