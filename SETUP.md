@@ -24,7 +24,7 @@ Project set up instructions:
 
 - **API Keys:** For this project, you would need additionally a GH_TOKEN,  LANGSMITH_API_KEY, and OPENAI_API_KEY. The GitHub token must have access to public repositories (required to fetch issues).
 
-- **Environment Variables:** There are two environment files for managing configurations, one for development (.env.dev) and one for production (.env.prod). After deploying the AWS CDK infrastructure, you will need to adapt the production environment variables, primarily the PostgreSQL connection parameters (user, password, host), which will be securely stored as secrets in AWS Secrets Manager. An additional SECRET_NAME parameter must be added to the production file to be able to retrieve the secrets programmatically.
+- **Environment Variables:** There are two environment files for managing configurations, one for development (`.env.dev`) and one for production (`.env.prod`). You must create both files. After deploying the AWS CDK infrastructure, you will need to adapt the production environment variables, primarily the PostgreSQL connection parameters (user, password, host), which will be securely stored as secrets in AWS Secrets Manager. An additional SECRET_NAME parameter must be added to the production file to be able to retrieve the secrets programmatically.
 
 - **Makefile:** To streamline environment management, the Makefile is set up to allow running the same commands depending on the environment. The APP_ENV variable is used to specify whether you want to work with development or production environments. Below is an example of how to run commands for different environments:
 
