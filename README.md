@@ -1,4 +1,4 @@
-# GitHub Issues Multiagents Intelligence
+# GitHub Issues Multiagent Intelligence
 
 <div align="center">
     <img src="img/github-issuses-multiagent-intelligence.png" alt="GitHub Issues Multiagent Intelligence Architecture">
@@ -22,7 +22,7 @@
     <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg"/></a>
 </div>
 <p align="center">
-    <em>A modular pipeline for searching and analyzing GitHub issues and providing recommendations for issues classification</em>
+    <em>A modular pipeline for searching and analyzing GitHub issues and providing recommendations for issue classification</em>
 </p>
 
 ______________________________________________________________________
@@ -38,7 +38,7 @@ This project provides an intelligent, multi-agent system for processing, analyzi
 
 ## Table of Contents
 
-- [GitHub Issues Multiagents Intelligence](#github-issues-multiagents-intelligence)
+- [GitHub Issues Multiagent Intelligence](#github-issues-multiagents-intelligence)
   - [Overview](#overview)
   - [Table of Contents](#table-of-contents)
   - [Project Structure](#project-structure)
@@ -206,7 +206,7 @@ The development mode runs on localhost. The production mode runs with RDS as the
 
 ### Configuration
 
-You must follow the [SETUP.md](https://github.com/benitomartin/github-issues-multiagent-intelligence/blob/main/SETUP.md) first before running the blow commands:
+You must follow the [SETUP.md](https://github.com/benitomartin/github-issues-multiagent-intelligence/blob/main/SETUP.md) first before running the below commands:
 
 ### PostgreSQL
 
@@ -228,7 +228,7 @@ alembic upgrade head
 
 ### Repositories
 
-This file defines which repositories to pull issues from, how many issues to pull, and in what state (e.g. open, closed, or all).
+This file defines which repositories to pull issues from, how many issues to pull, and in what state (e.g., open, closed, or all).
 
 ```bash
 - owner: scikit-learn
