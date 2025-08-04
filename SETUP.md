@@ -22,7 +22,7 @@ Project set up instructions:
 
 - **Qdrant Vector Database:** To use the Qdrant vector database, you will need to create a free Qdrant account, set up a free cluster, and get the QDRANT_API_KEY and QDRANT_URL.
 
-- **API Keys:** For this project, you would need additionally a GH_TOKEN,  LANGSMITH_API_KEY, and OPENAI_API_KEY. The GitHub token must have access to public repositories (required to fetch issues).
+- **API Keys:** For this project, you would additionally need a GH_TOKEN,  LANGSMITH_API_KEY, and OPENAI_API_KEY. The GitHub token must have access to public repositories (required to fetch issues).
 
 - **Environment Variables:** There are two environment files for managing configurations, one for development (`.env.dev`) and one for production (`.env.prod`). You must create both files. After deploying the AWS CDK infrastructure, you will need to adapt the production environment variables, primarily the PostgreSQL connection parameters (user, password, host), which will be securely stored as secrets in AWS Secrets Manager. An additional SECRET_NAME parameter must be added to the production file to be able to retrieve the secrets programmatically.
 
