@@ -29,6 +29,8 @@ ______________________________________________________________________
 
 This project provides an intelligent, multi-agent system for processing, analyzing, and managing GitHub issues at scale. It leverages LLMs, vector databases, and cloud-native Kubernetes infrastructure to automate search, triage, and enrichment of GitHub issues, supporting advanced workflows and integration using LangGraph agents.
 
+The project implementation can be found in detail in the following [blog](https://decodingml.substack.com/p/the-github-issue-ai-butler-on-kubernetes).
+
 ## Overview
 
 - Multi-agent orchestration for issue processing
